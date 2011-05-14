@@ -1,0 +1,3 @@
+vxJS is intended to be a lean cross-browser JavaScript/ECMAScript library.
+Along with the core script core.js and add-ons xhr.js, widget.js, fx.js a collection of widgets is readily available.
+The widgets are geared towards simplicity, and can frequently be combined for building more elaborate ones.
