@@ -1,7 +1,7 @@
 /**
  * Tree
  * 
- * @version 0.4.1pre, 2011-05-17
+ * @version 0.5.0pre, 2011-11-22
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -22,15 +22,15 @@
  * collapseTree
  * 
  * @todo handling of "disabled" property
+ * @todo alternatively add "hashes" to speed up tree traversal
+ * @todo add tree.insertBranch()
  */
-
-/*global document, vxJS*/
 
 vxJS.widget.tree = function(config) {
 
 	if(!config) { config = {}; }
 
-	var tree, allSubTrees = [], that = {}, checkBoxes = config.checkBoxes || false, cbDependence = !config.checkBoxIndependence, activeBranch;
+	var tree, that = {}, checkBoxes = config.checkBoxes || false, cbDependence = !config.checkBoxIndependence, activeBranch;
 
 	/**
 	 * Tree object
@@ -44,31 +44,63 @@ vxJS.widget.tree = function(config) {
 
 	Tree.prototype = {
 		findBranchByElem: function(e) {
-			var b, i, s;
+			var l = 0, b;
 
-			for(i = this.branches.length; i--;) {
-				b = this.branches[i];
-				if(b.element == e){
+			while((b = this.branches[l++])) {
+				if(b.element == e || (b.subtree && (b = b.subtree.findBranchByElem(e)))) {
 					return b;
-				}
-				if(b.subtree && (s = b.subtree.findBranchByElem(e))) {
-					return s;
 				}
 			}
 		},
 
-		addBranch: function(data) {
+		findBranchByPropertyValue: function(p, v) {
+			var l = 0, b;
+
+			while((b = this.branches[l++])) {
+				if(b[p] == v || (b.subtree && (b = b.subtree.findBranchByPropertyValue(p, v)))) {
+					return b;
+				}
+			}
+		},
+
+		appendBranch: function(data) {
 			var b = new Branch(this, data);
 			this.branches.push(b);
 			this.last = b;
 			b.pos = this.branches.length - 1;
 		},
 
+		removeBranch: function(ndx) {
+			b = this.branches, l;
+
+			if(ndx instanceof Branch) {
+				l = b.length;
+				while(l--) {
+					if(b[l] == ndx) {
+						ndx = l;
+						break;
+					}
+				}
+			}
+			if(typeof ndx == "number") {
+				b.splice(ndx, 1);
+				l = b.length;
+				while(ndx < l) {
+					b[ndx].pos = ndx++;
+				}
+				this.last = b[l - 1];
+			}
+		},
+
+		insertBranch: function(b, pos) {
+
+		},
+
 		addBranches: function(b) {
 			var i = 0, l = b.length;
 
 			while(i < l) {
-				this.addBranch(b[i++]);
+				this.appendBranch(b[i++]);
 			}
 		},
 
@@ -166,17 +198,20 @@ vxJS.widget.tree = function(config) {
 		this.tree = tree;
 
 		for(p in data) {
-			if(p == "branches") {
-				if(data.branches.length) {
-					this.appendSubTree(data.branches);
-				}
-				else {
-					this.terminates = true;
-				}
+			if(p == "branches" && data.branches.length) {
+				this.appendSubTree(data.branches);
 			}
 			else if(data.hasOwnProperty(p)) {
 				this[p] = data[p];
 			}
+		}
+
+		if(typeof this.terminates == "undefined" && config.leafNodeDefault && (!data.branches || !data.branches.length)) {
+			this.terminates = true;
+		}
+
+		if(typeof this.hasCheckBox == "undefined") {
+			this.hasCheckBox = checkBoxes === true || (checkBoxes == "last" && this.terminates);
 		}
 	};
 
@@ -188,7 +223,6 @@ vxJS.widget.tree = function(config) {
 				this.subtree.addBranches(b);
 			}
 			this.element.appendChild(this.subtree.element);
-			allSubTrees.push(this.subtree);
 		},
 		
 		removeSubTree: function() {
@@ -259,6 +293,10 @@ vxJS.widget.tree = function(config) {
 		renderCheckBox: function() {
 			var cn;
 
+			if(!this.hasCheckBox) {
+				return;
+			}
+
 			switch (+this.cbState) {
 				case 1:
 					cn = "checked";
@@ -309,7 +347,8 @@ vxJS.widget.tree = function(config) {
 			this.renderNode();
 			li.appendChild(this.nodeElem);
 
-			if(checkBoxes == "last" && this.nodeElem.className.indexOf("leafNode") != -1 || checkBoxes == true) {
+			if(this.hasCheckBox) {
+//			if(checkBoxes == "last" && this.nodeElem.className.indexOf("leafNode") != -1 || checkBoxes == true) {
 				if(typeof this.cbState == "undefined") {
 					if(cbDependence && this.tree.parent && this.tree.parent.cbState && this.tree.parent.cbState !== 2) {
 						this.cbState = this.tree.parent.cbState;
@@ -340,6 +379,15 @@ vxJS.widget.tree = function(config) {
 
 				if(li.className) {
 					while((prop = rex.exec(li.className))) {
+						if(prop[2] == 'false') {
+							b[prop[1]] = false;
+							continue;
+						}
+						if(prop[2] == 'true') {
+							b[prop[1]] = true;
+							continue;
+						}
+
 						b[prop[1]] = prop[2];
 					}
 				}
@@ -435,26 +483,14 @@ vxJS.widget.tree = function(config) {
 		};
 
 		return function(subTree) {
-			if(checkBoxes) {
-				branches = [];
-				cbRecursion(subTree || tree);
-				return branches;
-			}
+			branches = [];
+			cbRecursion(subTree || tree);
+			return branches;
 		};
 	})();
 
 	that.getBranch = function(p, v) {
-		var l = tree.branches.length, b;
-
-		while(l--) {
-			b = tree.branches[l];
-			if(b[p] == v) {
-				return b;
-			}
-			if((b = arguments.callee(p, v))) {
-				return b;
-			}
-		}
+		return tree.findBranchByPropertyValue(p, v);
 	};
 
 	that.customExpandTo = function(cb) {

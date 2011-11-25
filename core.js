@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 1.8.6 2011-05-13
+ * @version 1.8.11 2011-07-30
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -86,21 +86,21 @@ Color.prototype = {
  * 
  * Function.bind(newContext)
  * 
- * Array arr = Object.keys()
- *  
+ * Array arr	= Object.keys()
+ * Boolean res	= Array.isArray() 
+ * Boolean res	= Array.prototype.inArray(needle)
+ * number pos	= Array.prototype.indexOf(needle)
+ * Array arr	= Array.prototype.copy()
+ * Array arr	= Array.prototype.fill(value, count)
+ * Array arr	= Array.prototype.map(callback[,this])
+ * Array arr	= Array.prototype.filter(callback[,this])
+ * Array.prototype.forEach(callback[,this])
+ * 
  * Number sign	= Math.sgn(number)
  * String uuid	= Math.uuid()
  * 
  * String formatted Number = Number.toFormattedString(Number decimals, String dec_point, String thousands_sep)
  * (locale-free alternative for Number.toLocaleString()) 
- * 
- * bool result	= Array.inArray(needle)
- * number pos	= Array.indexOf(needle)
- * array arr	= Array.copy()
- * array arr	= Array.fill(value, count)
- * Array.forEach(callback[,this])
- * array arr	= Array.map(callback[,this])
- * array arr	= Array.filter(callback[,this])
  * 
  * String str	= String.trim()
  * String str	= String.lpad()
@@ -112,67 +112,29 @@ Color.prototype = {
 
 if(typeof Function.prototype.bind !== "function") {
     Function.prototype.bind = function(context) {
-    	var	aSlice = Array.prototype.slice, args = aSlice.call(arguments, 1), that = this, D = function() {},
-    		f = function() { return that.apply(this instanceof D ? this : context, Array.prototype.concat.call(args, aSlice.call(arguments, 0))); };
-    		D.prototype = that.prototype;
+    	var	slc = Array.prototype.slice, args = slc.call(arguments, 1), that = this, D = function() {},
+    		f = function() { return that.apply(this instanceof D ? this : context, args.concat(slc.call(arguments, 0))); };
+    	D.prototype = that.prototype;
         f.prototype = new D();
         return f;
     };
 }
 
-Object.keys = Object.keys || function(o) {
-	var r = [], p;
-	for(p in o) {
-		if (o.hasOwnProperty(p)) {
-			r.push(p);
-		}
-    }
-	return r;
-};
-
-Math.sgn = function(n){
-	n = typeof n !== "number"? parseFloat(n) : n;
-	if(isNaN(n)) {
-		return NaN;
-	}
-	return n < 0 ? -1 : 1;
-};
-
-Math.uuid = (function() {
-	var c = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split("");
-
-	return function() {
-		var u = [], r, i;
-		u[8] = u[13] = u[18] = u[23] = "-"; u[14] = "4";
-		for (i = 36; --i; ) {
-			if(!u[i]) {
-				r = 0 | Math.random() * 16;
-				u[i] = c[i == 19 ? (r & 0x3) | 0x8 : r];
+if(!Object.keys) {
+	Object.keys = function(o) {
+		var r = [], p;
+		for(p in o) {
+			if (o.hasOwnProperty(p)) {
+				r.push(p);
 			}
 		}
-		return u.join("");
+		return r;
 	};
-})();
+}
 
-Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
-	var f, p, t = "";
-
-	decPoint = decPoint || ".";
-	thdSep = thdSep || ",";
-	dec = typeof dec === "number" ? Math.round(dec) : 0;
-
-	f = this.toFixed(dec).toString();
-	p = f.split(".");
-
-	if(thdSep) {
-		while(p[0].length > 3) {
-			t = thdSep + p[0].slice(-3)+t;
-			p[0] = p[0].slice(0, -3);
-		}
-		p[0] = p[0]+t;
-	}
-	return (Math.sgn(this) < 0 ? "-" : "") + p[0] + (p[1] ? (decPoint + p[1]) : "");
-};
+if(!Array.isArray) {
+	Array.isArray = function(a) { return Object.prototype.toString.call(a) == '[object Array]'; };
+}
 
 Array.prototype.copy = function () { return this.slice(0); };
 
@@ -250,6 +212,50 @@ else {
 		return !(this.indexOf(needle) == -1);
 	};
 }
+
+Math.sgn = function(n){
+	n = typeof n !== "number"? parseFloat(n) : n;
+	if(isNaN(n)) {
+		return NaN;
+	}
+	return n < 0 ? -1 : 1;
+};
+
+Math.uuid = (function() {
+	var c = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split("");
+
+	return function() {
+		var u = [], r, i;
+		u[8] = u[13] = u[18] = u[23] = "-"; u[14] = "4";
+		for (i = 36; --i; ) {
+			if(!u[i]) {
+				r = 0 | Math.random() * 16;
+				u[i] = c[i == 19 ? (r & 0x3) | 0x8 : r];
+			}
+		}
+		return u.join("");
+	};
+})();
+
+Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
+	var f, p, t = "";
+
+	decPoint = decPoint || ".";
+	thdSep = thdSep || ",";
+	dec = typeof dec === "number" ? Math.round(dec) : 0;
+
+	f = this.toFixed(dec).toString();
+	p = f.split(".");
+
+	if(thdSep) {
+		while(p[0].length > 3) {
+			t = thdSep + p[0].slice(-3)+t;
+			p[0] = p[0].slice(0, -3);
+		}
+		p[0] = p[0]+t;
+	}
+	return (Math.sgn(this) < 0 ? "-" : "") + p[0] + (p[1] ? (decPoint + p[1]) : "");
+};
 
 if(!String.prototype.trim) {
 	String.prototype.trim = function() { return this.replace(/^\s+|\s+$/g, ""); };
@@ -494,7 +500,7 @@ String.prototype.setProp = function(n, v) {
 	if (arguments.length > 1) {
 		s.attr.push({name: n, value: v});
 	}
-	else if (arguments.length === 1 && n.constructor === Array) {
+	else if (arguments.length === 1 && Array.isArray(n)) {
 		for (i = n.length; i--;) {
 			s.attr.push({name : n[i][0], value : n[i][1]});
 		}
@@ -981,17 +987,9 @@ if(!this.vxJS) {
 				return !suppEvts[ndx];
 			},
 
-			getAbsMousePos: function() {
-				var body = html || vxJS.dom.getBody();
-	
-				if(typeof global.pageXOffset != "undefined") {
-					return function(e) { return new Coord(e.clientX + global.pageXOffset, e.clientY + global.pageYOffset); };
-				}
-				if(body && typeof body.scrollLeft != "undefined") {
-					return function(e) { return new Coord(e.clientX + body.scrollLeft, e.clientY + body.scrollTop); };
-				}
-				return function(e) { return new Coord(e.clientX, e.clientY); };
-			}(),
+			getAbsMousePos: function(e) {
+				 return new Coord(e.clientX, e.clientY).add(vxJS.dom.getDocumentScroll());
+			},
 
 			getMouseButtons: function(e) {
 				var b = e.which;
@@ -1117,10 +1115,18 @@ if(!this.vxJS) {
 			return false;
 		},
 		
+		cnCache: [],
+
+		hasClassName: function(elem, cN) {
+			if(!this.cnCache[cN]) {
+				this.cnCache[cN] = new RegExp("(?:\\s|^)"+ cN + "(?:\\s|$)"); 
+			}
+			return this.cnCache[cN].test(elem.className);
+		},
+
 		addClassName: function(elem, cN) {
-			var c = elem.className.trim().split(Rex.blanks);
-			if(c.indexOf(cN) == -1) {
-				elem.className += (c[0].length ? " " : "") + cN;
+			if(!this.hasClassName(elem, cN)) {
+				elem.className += (elem.className.trim().length ? " " : "") + cN;
 			}
 		},
 
@@ -1307,6 +1313,16 @@ if(!this.vxJS) {
 			return pos;
 		},
 
+		getElementPosition: function(elem) {
+			return new Coord(parseInt(this.getStyle(elem, "left"), 10), parseInt(this.getStyle(elem, "top"), 10));
+		},
+
+		setElementPosition: function(elem, pos) {
+			var s	= elem.style;
+			s.left	= pos.x+"px";
+			s.top	= pos.y+"px";
+		},
+
 		getElementSize: function(elem) {
 			return new Coord(elem.offsetWidth, elem.offsetHeight);
 		},
@@ -1329,16 +1345,6 @@ if(!this.vxJS) {
 			var s	= elem.style;
 			s.width	= dim.x+"px";
 			s.height= dim.y+"px";
-		},
-
-		getElementPosition: function(elem) {
-			return new Coord(parseInt(this.getStyle(elem, "left"), 10), parseInt(this.getStyle(elem, "top"), 10));
-		},
-
-		setElementPosition: function(elem, pos) {
-			var s	= elem.style;
-			s.left	= pos.x+"px";
-			s.top	= pos.y+"px";
 		},
 
 		nextNeighbor: function(n) {
@@ -1452,7 +1458,7 @@ if(!this.vxJS) {
 			};
 
 			var d = document.createDocumentFragment(), i;
-			if(elem.constructor === Array) {
+			if(Array.isArray(elem)) {
 				for(i = 0; i < elem.length; i++) {
 					insertTree(elem[i], d);
 				}
@@ -1538,12 +1544,28 @@ if(!this.vxJS) {
 			};
 		}(),
 		
-		getDocumentScroll: function() {
-			return new Coord(
-				Math.max(vxJS.dom.getBody().scrollLeft, html.scrollLeft),
-				Math.max(vxJS.dom.getBody().scrollTop, html.scrollTop)
-			);
-		}
+		getDocumentScroll: (function() {
+			return function() {
+				if(typeof global.pageXOffset == "number") {
+					this.getDocumentScroll = function() {
+						return new Coord(
+							global.pageXOffset,
+							global.pageYOffset
+						);
+					};
+				}
+
+				else {
+					this.getDocumentScroll = function() {
+						return new Coord(
+							Math.max(vxJS.dom.getBody().scrollLeft, html.scrollLeft),
+							Math.max(vxJS.dom.getBody().scrollTop, html.scrollTop)
+						);
+					};
+				}
+				return this.getDocumentScroll();
+			};
+		}())
 	};
 
 	vxJS.selection = {

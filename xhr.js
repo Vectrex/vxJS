@@ -8,12 +8,11 @@
  * 
  * @returns xhr object
  * 
- * @version 3.7.0 2010-12-16
+ * @version 3.8.0 2011-06-02
  * @author Gregor Kofler
  * 
- * served events: "timeout", "complete", "fail"
+ * served events: "timeout", "complete", "fail", "beforeSend"
  */
-/* global vxJS */ 
 
 vxJS.xhrObj = function() {
 	var	ms = ["Msxml2.XMLHTTP", "Msxml2.XMLHTTP.3.0", "Msxml2.XMLHTTP.6.0"], i, ok;
@@ -39,7 +38,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 	if(!param)	{ param = {}; }
 	if(!anim)	{ anim = {}; }
 
-	var	timeout = req.timeout || 5000, timer, http = vxJS.xhrObj(), that = { response: {} };
+	var	timeout = req.timeout || 5000, timer, xhrO = vxJS.xhrObj(), that = { response: {} };
 
 	var stopTimer = function() {
 		if(timer) {
@@ -52,10 +51,10 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 	var abort = function() {
 		stopTimer();
-		if(http) { 
-			http.onreadystatechange = function() {};
-			if(http.readyState !== 0 && http.readyState !== 4) {
-				http.abort();
+		if(xhrO) { 
+			xhrO.onreadystatechange = function() {};
+			if(xhrO.readyState !== 0 && xhrO.readyState !== 4) {
+				xhrO.abort();
 			}
 		}
 	};
@@ -76,15 +75,15 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	var stateChange = function () {
-		if(http.readyState === 4) {
-			if(http.status >= 200 && http.status < 300 || http.status === 1223) {
+		if(xhrO.readyState === 4) {
+			if(xhrO.status >= 200 && xhrO.status < 300 || xhrO.status === 1223) {
 				abort();
 
 				if(req.forceXMLResponse) {
-					that.response = http.responseXML || http.responseText;
+					that.response = xhrO.responseXML || xhrO.responseText;
 				}
 				else {
-					that.response = JSON.parse(http.responseText || "{}");
+					that.response = JSON.parse(xhrO.responseText || "{}");
 				}
 	
 				vxJS.event.serve(that, "complete");
@@ -107,23 +106,24 @@ vxJS.xhr = function(req, param, anim, cb) {
 		param.httpRequest = req.command || "";
 		param.echo = req.echo ? 1 : 0;
 	
-		if(req.forceXMLResponse && http.overrideMimeType) {
-			http.overrideMimeType("text/xml");
+		if(req.forceXMLResponse && xhrO.overrideMimeType) {
+			xhrO.overrideMimeType("text/xml");
 		}
 
-		http.open(	"POST",
+		xhrO.open(	"POST",
 					encodeURI(req.uri || window.location.href),
 					true
 		);
-		http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-		http.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		xhrO.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	
-		http.onreadystatechange = stateChange;	
+		xhrO.onreadystatechange = stateChange;	
+		vxJS.event.serve(that, "beforeSend");
+		xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
 		startTimer();
-		http.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
 	};
 
-	that.http	= http;
+	that.xhrObj	= xhrO;
 	that.abort	= abort;
 	that.submit = submit;
 	that.use	= function(r, p, a, c) {
