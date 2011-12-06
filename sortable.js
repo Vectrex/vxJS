@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.0 2010-10-27
+ * @version 0.4.1 2011-12-06
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -9,17 +9,16 @@
  * 
  * served events: "beginSort", "finishSort", "dragStart", "dragStop"
  * 
- * @todo expose method to force sorting
  * @todo provide optional column to sort upon startup
  */
 vxJS.widget.sorTable = function(table, columnFormat) {
 
-	var	th, tb, rows = [],cols = [], h, w, activeColumn, origSort = [], that = {},
-		draggedRow, ind = {}, mouseUpId, mouseMoveId;
-
 	if(!columnFormat || !columnFormat.length) {
 		columnFormat = [];
 	}
+
+	var	th, tb, rows = [],cols = [], h, w, activeColumn, origSort = [], that = {},
+		draggedRow, ind = {}, mouseUpId, mouseMoveId;
 
 	var removeIndicator = function() {
 		if(ind.above) {
@@ -170,53 +169,6 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		}
 	};
 
-	var prepare = function() {
-		var i;
-
-		if (table.nodeName === "TBODY") {
-			tb = table;
-			table = tb.parentNode;
-		}
-		else if (table.nodeName === "TABLE") {
-			tb = table.tBodies[0];
-		}	
-		else {
-			throw Error("vxJS.widget.sorTable: No valid table or tbody element.");
-		}
-
-		if(!(th = table.getElementsByTagName("thead")[0])) {
-			th = "thead".create();
-			tb.parentNode.insertBefore(th, tb);
-			th.appendChild(tb.rows[0]);
-		}
-
-		w = th.rows[0].cells.length;
-		h = tb.rows.length;
-
-		for (i = 0; i < h; ++i) {
-			origSort.push(tb.rows[i]);
-
-			rows.push({
-				elem: tb.rows[i],
-				sortValue: null
-			});
-		}
-
-		vxJS.event.addListener(th, "click", doSort);
-	};
-
-	var analyzeColumns = function() {
-		var i;
-
-		if(columnFormat.indexOf("manual") !== -1) {
-			vxJS.event.addListener(tb, "mousedown", startDrag);
-		}
-
-		for (i = 0; i < w; ++i) {
-			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
-		}
-	};
-
 	var buildTable = function() {
 		var t = document.createDocumentFragment(), i, l = rows.length;
 
@@ -227,7 +179,6 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var doSort = function() {
-		var c, n = this, ndx;
 
 		var cbSort = function() {
 			var s = this.asc ? 1 : -1;
@@ -248,6 +199,16 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 				return a.sortValue < b.sortValue ? -s : s;
 			};
 		};
+
+		vxJS.event.serve(that, "beginSort");
+		getColumnValues(activeColumn.ndx);
+		rows.sort(typeof activeColumn.format == "function" ? activeColumn.format.bind(activeColumn) : cbSort.bind(activeColumn)());
+		buildTable();
+		vxJS.event.serve(that, "finishSort");
+	};
+
+	var sortOnClick = function() {
+		var c, n = this, ndx;
 
 		while(!/th|td/i.test(n.nodeName) && n.parentNode) {
 			n = n.parentNode;
@@ -270,18 +231,55 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 			activeColumn = c;
 		}
 		hiliteColumn(c);
-
-		vxJS.event.serve(that, "beginSort");
-
-		getColumnValues(c.ndx);
-
-		rows.sort(typeof c.format == "function" ? c.format.bind(c) : cbSort.bind(c)());
-
-		buildTable();
-
-		vxJS.event.serve(that, "finishSort");
+		doSort();
 	};
 
+	var prepare = function() {
+		var i;
+
+		if (table.nodeName === "TBODY") {
+			tb = table;
+			table = tb.parentNode;
+		}
+		else if (table.nodeName === "TABLE") {
+			tb = table.tBodies[0];
+		}	
+		else {
+			throw new Error("vxJS.widget.sorTable: No valid table or tbody element.");
+		}
+
+		if(!(th = table.getElementsByTagName("thead")[0])) {
+			th = "thead".create();
+			tb.parentNode.insertBefore(th, tb);
+			th.appendChild(tb.rows[0]);
+		}
+
+		w = th.rows[0].cells.length;
+		h = tb.rows.length;
+
+		for (i = 0; i < h; ++i) {
+			origSort.push(tb.rows[i]);
+
+			rows.push({
+				elem: tb.rows[i],
+				sortValue: null
+			});
+		}
+
+		vxJS.event.addListener(th, "click", sortOnClick);
+	};
+
+	var analyzeColumns = function() {
+		var i;
+
+		if(columnFormat.indexOf("manual") !== -1) {
+			vxJS.event.addListener(tb, "mousedown", startDrag);
+		}
+
+		for (i = 0; i < w; ++i) {
+			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
+		}
+	};
 
 	prepare();
 	analyzeColumns();
@@ -298,6 +296,8 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		}
 		return order;
 	};
+
+	that.reSort = doSort;
 
 	that.element = tb;
 

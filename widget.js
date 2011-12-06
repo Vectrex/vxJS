@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.9 2011-03-14
+ * @version 0.6.10 2011-12-06
  * @author Gregor Kofler
  *
  * currently providing
@@ -129,7 +129,7 @@ vxJS.widget.shared = {
 	 * shade table rows by assigning alternating class names
 	 */
 	shadeTableRows: function(param) {
-		var t, r, c, i, l;
+		var t, r, c, i, j, l;
 		if(!param || !(t = param.element)) {
 			return;
 		}
@@ -144,8 +144,10 @@ vxJS.widget.shared = {
 		}
 		c = param.classNames && param.classNames.length && param.classNames.length > 1 ? param.classNames : ["row0", "row1"];
 
-		for(i = 0, l = r.length; i < l; ++i) {
-			r[i].className = c[i % c.length];
+		for(i = 0, j = 0, l = r.length; l--; ++j) {
+			if(r[j].style.display !== "none") {
+				r[j].className = c[i++ % c.length];
+			}
 		}
 	},
 
