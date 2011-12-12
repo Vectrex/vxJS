@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 1.8.11 2011-07-30
+ * @version 1.9.0 2011-12-12
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -87,6 +87,7 @@ Color.prototype = {
  * Function.bind(newContext)
  * 
  * Array arr	= Object.keys()
+ * Object obj	= Object.create()
  * Boolean res	= Array.isArray() 
  * Boolean res	= Array.prototype.inArray(needle)
  * number pos	= Array.prototype.indexOf(needle)
@@ -129,6 +130,17 @@ if(!Object.keys) {
 			}
 		}
 		return r;
+	};
+}
+
+if(!Object.create) {
+	Object.create = function(o) {
+		if(arguments.length > 1) {
+			throw new Error("Object.create polyfill allows only one parameter.");
+		}
+		function F() {}
+		F.prototype = o;
+		return new F();
 	};
 }
 
@@ -221,21 +233,17 @@ Math.sgn = function(n){
 	return n < 0 ? -1 : 1;
 };
 
-Math.uuid = (function() {
-	var c = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split("");
-
-	return function() {
-		var u = [], r, i;
-		u[8] = u[13] = u[18] = u[23] = "-"; u[14] = "4";
-		for (i = 36; --i; ) {
-			if(!u[i]) {
-				r = 0 | Math.random() * 16;
-				u[i] = c[i == 19 ? (r & 0x3) | 0x8 : r];
-			}
+Math.uuid = function() {
+	var u = [], r, i = 36;
+	u[8] = u[13] = u[18] = u[23] = "-"; u[14] = "4";
+	while(i--) {
+		if(!u[i]) {
+			r = 0 | Math.random() * 16;
+			u[i] = "0123456789ABCDEF"[i == 19 ? (r & 0x3 | 0x8) : r];
 		}
-		return u.join("");
-	};
-})();
+	}
+	return u.join("");
+};
 
 Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 	var f, p, t = "";
@@ -588,12 +596,6 @@ if(!this.vxJS) {
 			if(!isHostMethod(o, m[i])) { return false; }
 		}
 		return true;
-	};
-
-	function F() {}
-	var beget = function(o) {
-		F.prototype = o;
-		return new F();
 	};
 
 	var isEmpty = function(o) {
@@ -1114,14 +1116,9 @@ if(!this.vxJS) {
 			}
 			return false;
 		},
-		
-		cnCache: [],
 
 		hasClassName: function(elem, cN) {
-			if(!this.cnCache[cN]) {
-				this.cnCache[cN] = new RegExp("(?:\\s|^)"+ cN + "(?:\\s|$)"); 
-			}
-			return this.cnCache[cN].test(elem.className);
+			return (" " + elem.className + " ").indexOf(" " + cN + " ") !== -1;
 		},
 
 		addClassName: function(elem, cN) {
@@ -1645,11 +1642,10 @@ if(!this.vxJS) {
 		}
 	};
 
-	vxJS.isHostMethod = isHostMethod;
-	vxJS.beget = beget;
-	vxJS.isEmpty = isEmpty;
-	vxJS.merge = merge;
-	vxJS.collectionToArray = collectionToArray;
+	vxJS.isHostMethod		= isHostMethod;
+	vxJS.isEmpty			= isEmpty;
+	vxJS.merge				= merge;
+	vxJS.collectionToArray	= collectionToArray;
 
 	vxJS.widget = {};
 })();
