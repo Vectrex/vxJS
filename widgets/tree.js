@@ -14,12 +14,13 @@
  *		expandTo:				{Number|"all"} number of levels shown upon default
  *
  * events served:
- * branchClick
- * beforeNodeClick
- * afterNodeClick
- * afterCheckBoxClick
- * expandTree
- * collapseTree
+ *	branchClick
+ *	beforeNodeClick
+ *	afterNodeClick
+ *	beforeCheckBoxClick
+ *	afterCheckBoxClick
+ *	expandTree
+ *	collapseTree
  * 
  * @todo handling of "disabled" property
  * @todo alternatively add "hashes" to speed up tree traversal
