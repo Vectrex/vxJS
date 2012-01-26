@@ -1344,7 +1344,7 @@ if(!this.vxJS) {
 			s.height= dim.y+"px";
 		},
 
-		nextNeighbor: function(n) {
+		nextSameNameSibling: function(n) {
 			var nN = n.nodeName;
 			while((n = n.nextSibling)) {
 				if(n.nodeName === nN) {
@@ -1353,7 +1353,7 @@ if(!this.vxJS) {
 			}
 		},
 
-		prevNeighbor: function(n) {
+		prevSameNameSibling: function(n) {
 			var nN = n.nodeName;
 			while((n = n.previousSibling)) {
 				if(n.nodeName === nN) {
@@ -1647,5 +1647,7 @@ if(!this.vxJS) {
 	vxJS.merge				= merge;
 	vxJS.collectionToArray	= collectionToArray;
 
+        vxJS.dom.nextNeighbor = vxJS.dom.nextSameNameSibling;
+        vxJS.dom.prevNeighbor = vxJS.dom.prevSameNameSibling;
 	vxJS.widget = {};
 })();
