@@ -180,6 +180,24 @@ if(!Array.prototype.map) {
 	};
 }
 
+if(!Element.nextElementSibling) {
+    Element.prototype.nextElementSibling = function(elem) {
+        do {
+            el = el.nextSibling;
+        } while (el && el.nodeType !== 1);
+        return el;
+    };
+}
+
+if(!Element.prevElementSibling) {
+    Element.prototype.prevElementSibling = function(elem) {
+        do {
+            el = el.prevSibling;
+        } while (el && el.nodeType !== 1);
+        return el;
+    };
+}
+
 if(!Array.prototype.filter) {  
 	Array.prototype.filter = function(f, that) {  
 		var i = 0, l = this.length, r = [], v;  
@@ -1361,20 +1379,6 @@ if(!this.vxJS) {
 				}
 			}
 		},
-
-                nextElementSibling: function(elem) {
-                        do {
-                                el = el.nextSibling;
-                        } while (el && el.nodeType !== 1);
-                        return el;
-                },
-                
-                prevElementSibling: function(elem) {
-                        do {
-                                el = el.prevSibling;
-                        } while (el && el.nodeType !== 1);
-                        return el;
-                },
 
 		moveBefore: function(n1, n2) {
 			var p = n1.parentNode;
