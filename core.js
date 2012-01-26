@@ -1362,6 +1362,20 @@ if(!this.vxJS) {
 			}
 		},
 
+                nextElementSibling: function(elem) {
+                        do {
+                                el = el.nextSibling;
+                        } while (el && el.nodeType !== 1);
+                        return el;
+                },
+                
+                prevElementSibling: function(elem) {
+                        do {
+                                el = el.prevSibling;
+                        } while (el && el.nodeType !== 1);
+                        return el;
+                },
+
 		moveBefore: function(n1, n2) {
 			var p = n1.parentNode;
 			p.removeChild(n1);
