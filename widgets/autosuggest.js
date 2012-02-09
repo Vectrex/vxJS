@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.3 2011-03-15
+ * @version 0.6.4a 2012-02-09
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
@@ -16,7 +16,7 @@
  *	customShow:	{Function} callback function applying fx, when element is shown
  *	customHide:	{Function} callback function applying fx, when element is hidden
  *
- * served events: "choose", "show", "hide"
+ * served events: "choose", "show", "hide", "submitNoMatch"
  */
 
 vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
@@ -201,9 +201,11 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			case 38:
 				list.up();
 				break;
+
 			case 40:
 				list.down();
 				break;
+
 			case 27:
 				if(!searchMode) {
 					setValue(initData);
@@ -211,13 +213,17 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 				sentString = null;
 				hide();
 				break;
+
 			case 13:
 				if(shown) {
 					handleChoose();
-					hide();
-					vxJS.event.preventDefault(e);
 				}
+				else {
+					vxJS.event.serve(that, "submitNoMatch");
+				}
+				vxJS.event.preventDefault(e);
 				break;
+
 			default:
 				keyListened = false;
 		}
