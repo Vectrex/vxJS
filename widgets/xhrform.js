@@ -141,6 +141,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 				}
 			}
 		});
+
+		prevErr = [];
 	};
 
 	var setErrors = function(err) {
