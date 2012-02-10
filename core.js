@@ -73,12 +73,12 @@ Color = function(c) {
 };
 
 Color.prototype = {
-		toHex: function() {
-			return "#"+("00"+Math.round(this.r).toString(16)).slice(-2)+("00"+Math.round(this.g).toString(16)).slice(-2)+("00"+Math.round(this.b).toString(16)).slice(-2);
-		},
-		toRGB: function() {
-			return "rgb("+Math.round(this.r)+","+Math.round(this.g)+","+Math.round(this.b)+")";
-		}
+	toHex: function() {
+		return "#"+("00"+Math.round(this.r).toString(16)).slice(-2)+("00"+Math.round(this.g).toString(16)).slice(-2)+("00"+Math.round(this.b).toString(16)).slice(-2);
+	},
+	toRGB: function() {
+		return "rgb("+Math.round(this.r)+","+Math.round(this.g)+","+Math.round(this.b)+")";
+	}
 };
 
 /**
