@@ -3,7 +3,7 @@
  * attach a second select box to an already existing one
  * allow shifting of entries between both
  * 
- * @version 0.5.3 2011-02-22
+ * @version 0.5.4 2012-02-10
  * 
  * @param {object} existing select box, becomes destination box
  * 
@@ -53,6 +53,7 @@ vxJS.widget.dualSelectBox = function(destBox) {
 		destBox.multiple = true;
 		srcBox = destBox.cloneNode(true);
 		srcBox.name += "_source";
+		vxJS.dom.addClassName(srcBox, "vxJS_dualSelectBox_source");
 
 		// Quirks for IE6
 		for(i = destBox.options.length; i--;) {
@@ -84,6 +85,8 @@ vxJS.widget.dualSelectBox = function(destBox) {
 	createContainer();
 	createSourceBox();
 	createShiftButtons();
+
+	vxJS.dom.addClassName(destBox, "vxJS_dualSelectBox_dest");
 
 	if(destBox.form) {
 		vxJS.event.addListener(destBox.form, "submit",

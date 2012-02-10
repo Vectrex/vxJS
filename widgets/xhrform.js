@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  * 
- * @version 0.3.0 2011-10-26
+ * @version 0.3.1 2012-02-10
  * @author Gregor Kofler, info@gregorkofler.at
  * 
  * @param {Object} form element
@@ -136,7 +136,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			e.elements.forEach(function(elem) { vxJS.dom.removeClassName(elem, "error"); });
 			if((n = document.getElementById("error_"+e.name))) {
 				vxJS.dom.removeClassName(n, "error");
-				if(e.text) {
+				if(e.text && n.lastChild) {
 					n.removeChild(n.lastChild);
 				}
 			}
@@ -193,19 +193,22 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 						break;
 						
 					case "select-multiple":
+						if(vxJS.dom.hasClassName(e, "vxJS_dualSelectBox_source")) {
+							continue;
+						}
 						o = e.options;
 						v = [];
 						for (j = o.length; j--;) {
-							if (o[j].selected) {
+							if (o[j].selected || vxJS.dom.hasClassName(e, "vxJS_dualSelectBox_dest")) {
 								v.push(o[j].value);
 							}
 						}
 						break;
-						
+
 					case "select-one":
 						v = e.options[e.selectedIndex].value;
 						break;
-						
+
 					case "submit":
 					case "image":
 					case "button":
