@@ -6,13 +6,15 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  * 
- * @version 0.3.1 2012-02-10
+ * @version 0.3.3 2012-02-10
  * @author Gregor Kofler, info@gregorkofler.at
  * 
  * @param {Object} form element
  * @param {Object} xhr request configuration object
  * 
  * @todo improve enableSubmit(), disableSubmit()
+ * 
+ * served events: "ifuResponse", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq) {
@@ -21,7 +23,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		throw new Error("widget.xhrForm: no form element specified!");
 	}
 
-	var	prevErr = [], msgBoxes = [], that = {},
+	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout,
 		submittingElement, ifrm, submittedByApp, submittingNow,
 		xhr = vxJS.xhr(xhrReq), lastXhrResponse, xhrImgSize,
@@ -98,10 +100,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	var setValues = function(v) {
-		var i, j, elements = form.elements;
+		var i, j;
 
 		for(i = v.length; i--;) {
-			if(!(e = elements[v[i].name])) {
+			if(!(e = form.elements[v[i].name])) {
 				continue;
 			}
 
@@ -223,6 +225,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 				}
 			}
 		}
+
 		return vals;
 	};
 	
@@ -282,11 +285,11 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 			if(!r || r.cancel_upload) {
 				window.clearTimeout(apcPollTimeout);
-				vxJS.event.serve("apcFinish", that);
+				vxJS.event.serve(that, "apcFinish");
 				hideApcInfo();
 			}
 			else {
-				vxJS.event.serve("apcUpdate", that);
+				vxJS.event.serve(that, "apcUpdate");
 				updateApcInfo(r);
 			}
 		};
@@ -358,7 +361,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	var handleClick = function(e) {
-
+		var v;
+		
 		vxJS.event.preventDefault(e);
 
 		if(submittingNow) {
@@ -366,8 +370,14 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		}
 		submittingElement = this;
 
+		vxJS.event.serve(that, "beforeSubmit");
+		
 		posXhrImg();
-		xhr.use(null, { elements: getValues(form.elements, this) }, { node: xhrImg });
+
+		v = getValues(form.elements, this);
+		vxJS.merge(v, payload);
+
+		xhr.use(null, { elements: v }, { node: xhrImg });
 		xhr.submit();
 	};
 
@@ -408,6 +418,13 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	that.forceRequest = function() {
+		var v;
+
+		vxJS.event.serve(that, "beforeSubmit");
+
+		v = getValues(form.elements, this);
+		vxJS.merge(v, payload);
+
 		xhr.use(null, { elements: getValues(form.elements, this) }, { node: null } );
 		xhr.submit();
 	};
@@ -450,6 +467,14 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 	that.getLastXhrResponse = function() {
 		return lastXhrResponse;
+	};
+
+	that.setPayload = function(pl) {
+		payload = pl;
+	};
+
+	that.clearPayload = function() {
+		delete payload;
 	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
