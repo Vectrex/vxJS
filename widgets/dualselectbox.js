@@ -3,13 +3,13 @@
  * attach a second select box to an already existing one
  * allow shifting of entries between both
  * 
- * @version 0.5.4 2012-02-10
+ * @version 0.5.5 2012-02-11
  * 
  * @param {object} existing select box, becomes destination box
  * 
  */
 vxJS.widget.dualSelectBox = function(destBox) {
-	var container = "div".setProp("class", "vxJS_dualSelectBox").create(), srcBox;
+	var container = "span".setProp("class", "vxJS_dualSelectBox").create(), srcBox;
 
 	var shiftSelectedOptions = function(src, dest) {
 		var i = 0, o;
@@ -49,7 +49,6 @@ vxJS.widget.dualSelectBox = function(destBox) {
 	var createSourceBox = function() {
 		var i;
 
-		destBox.style.cssFloat = destBox.style.styleFloat = "left";
 		destBox.multiple = true;
 		srcBox = destBox.cloneNode(true);
 		srcBox.name += "_source";
@@ -71,8 +70,7 @@ vxJS.widget.dualSelectBox = function(destBox) {
 		var subAll	= "button".setProp([["type", "button"], ["class", "subAll"]]).create("\u00ab");
 		var add		= "button".setProp([["type", "button"], ["class", "add"]]).create(">");
 		var sub		= "button".setProp([["type", "button"], ["class", "sub"]]).create("<");
-		var bar		= "div".setProp("class", "vxJS_dualSelectBox_buttons").create([addAll, add, sub, subAll]);
-		bar.style.cssFloat	= bar.style.styleFloat = "left";
+		var bar		= "span".setProp("class", "vxJS_dualSelectBox_buttons").create([addAll, add, sub, subAll]);
 
 		vxJS.event.addListener(add,	"click", function() { shiftSelectedOptions(srcBox, destBox); });
 		vxJS.event.addListener(sub, "click", function() { shiftSelectedOptions(destBox, srcBox); });
