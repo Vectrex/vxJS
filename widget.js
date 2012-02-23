@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.10 2011-12-06
+ * @version 0.6.10a 2012-02-23
  * @author Gregor Kofler
  *
  * currently providing
@@ -13,7 +13,8 @@
  * 
  * @todo list: Safari doesn't follow keystrokes
  */
-/*global vxJS*/
+
+"use strict";
 
 vxJS.widget.shared = {
 

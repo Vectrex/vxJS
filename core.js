@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 1.9.0 2011-12-12
+ * @version 1.9.1 2012-02-23
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -16,7 +16,10 @@
 /**
  * Coord object
  */
-Coord = function(x, y) {
+
+"use strict";
+
+var Coord = function(x, y) {
 	this.x = !+x ? 0 : parseInt(x,10);
 	this.y = !+y ? 0 : parseInt(y,10);
 };
@@ -36,7 +39,7 @@ Coord.prototype = {
 /**
  * Color object
  */
-Color = function(c) {
+var Color = function(c) {
 	var r, g, b, a;
 
 	if(!c) {
@@ -266,7 +269,9 @@ Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 };
 
 if(!String.prototype.trim) {
-	String.prototype.trim = function() { return this.replace(/^\s+|\s+$/g, ""); };
+	String.prototype.trim = function() {
+		return this.replace(/^\s\s*/, "").replace(/\s+$/, "");
+	};
 }
 
 String.prototype.lpad = function(len, fchar) {
@@ -569,16 +574,15 @@ if(!this.vxJS) {
 	var vxJS = {};
 }
 
-(function() {
+(function(global) {
 	var Rex = {
 		isHM: /^(object|function)$/i,
 		isNumberOrString: /^(string|number)$/,
 		blanks: /\s+/
 	};
 
-	var global	= this,
-		win		= this,
-		doc		= this.document,
+	var win		= global,
+		doc		= global.document,
 		html	= doc.documentElement;
 
 	var isHostMethod = function(o, m) {
@@ -1648,4 +1652,4 @@ if(!this.vxJS) {
 	vxJS.collectionToArray	= collectionToArray;
 
 	vxJS.widget = {};
-})();
+})(this);

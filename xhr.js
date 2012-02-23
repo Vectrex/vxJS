@@ -8,11 +8,13 @@
  * 
  * @returns xhr object
  * 
- * @version 3.8.0 2011-06-02
+ * @version 3.8.0a 2012-02-23
  * @author Gregor Kofler
  * 
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
+
+"use strict";
 
 vxJS.xhrObj = function() {
 	var	ms = ["Msxml2.XMLHTTP", "Msxml2.XMLHTTP.3.0", "Msxml2.XMLHTTP.6.0"], i, ok;
