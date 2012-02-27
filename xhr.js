@@ -125,9 +125,35 @@ vxJS.xhr = function(req, param, anim, cb) {
 		startTimer();
 	};
 
+        var get = function() {
+            
+                abort();
+
+                param.httpRequest = req.command || "";
+                param.echo = req.echo ? 1 : 0;
+
+                if(req.forceXMLResponse && xhrO.overrideMimeType) {
+                    
+                        xhrO.overrideMimeType("text/html");
+                }
+
+                xhrO.open(      "GET",
+                                        encodeURI(req.uri || window.location.href),
+                                        true
+                );
+                xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                xhrO.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+                xhrO.onreadystatechange = stateChange;
+                vxJS.event.serve(that, "beforeSend");
+                xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+                startTimer();
+        };
+
 	that.xhrObj	= xhrO;
 	that.abort	= abort;
 	that.submit = submit;
+        that.get = get;
 	that.use	= function(r, p, a, c) {
 		vxJS.merge(req,		r);
 		vxJS.merge(param,	p);
