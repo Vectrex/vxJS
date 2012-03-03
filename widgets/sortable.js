@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.1 2011-12-06
+ * @version 0.4.1a 2012-03-03
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -56,8 +56,8 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	var mouseMoveListener = function(e) {
 		var mPos = vxJS.event.getAbsMousePos(e), y = draggedRow.pos.y, elem = draggedRow.elem, sib, next;
 		
-		if(mPos.y < y && (sib = vxJS.dom.prevNeighbor(elem)) && mPos.y < (y -= sib.offsetHeight/2)) {
-			while((next = vxJS.dom.prevNeighbor(sib))) {
+		if(mPos.y < y && (sib = vxJS.dom.prevSameNodeNameSibling(elem)) && mPos.y < (y -= sib.offsetHeight/2)) {
+			while((next = vxJS.dom.prevSameNodeNameSibling(sib))) {
 				if(mPos.y > y - sib.offsetHeight/2 - next.offsetHeight/2) {
 					break;
 				}
@@ -71,8 +71,8 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 			ind.above = sib;
 			vxJS.dom.addClassName(sib, "insertAbove");
 		}
-		else if(mPos.y > (y += elem.offsetHeight) && (sib = vxJS.dom.nextNeighbor(elem)) && mPos.y > (y += sib.offsetHeight/2)) {
-			while((next = vxJS.dom.nextNeighbor(sib))) {
+		else if(mPos.y > (y += elem.offsetHeight) && (sib = vxJS.dom.nextSameNodeNameSibling(elem)) && mPos.y > (y += sib.offsetHeight/2)) {
+			while((next = vxJS.dom.nextSameNodeNameSibling(sib))) {
 				if(mPos.y < y + sib.offsetHeight/2 + next.offsetHeight/2) {
 					break;
 				}

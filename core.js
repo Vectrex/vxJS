@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 1.9.1 2012-02-23
+ * @version 1.9.1a 2012-03-03
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -1348,7 +1348,7 @@ if(!this.vxJS) {
 			s.height= dim.y+"px";
 		},
 
-		nextNeighbor: function(n) {
+		nextSameNodeNameSibling: function(n) {
 			var nN = n.nodeName;
 			while((n = n.nextSibling)) {
 				if(n.nodeName === nN) {
@@ -1357,7 +1357,7 @@ if(!this.vxJS) {
 			}
 		},
 
-		prevNeighbor: function(n) {
+		prevSameNodeNameSibling: function(n) {
 			var nN = n.nodeName;
 			while((n = n.previousSibling)) {
 				if(n.nodeName === nN) {

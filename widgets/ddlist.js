@@ -3,7 +3,7 @@
  * 
  * allows to rearrange list elements with drag and drop
  * 
- * @version 0.2.2 2010-06-20
+ * @version 0.2.2a 2012-03-03
  * @author Gregor Kofler
  * 
  * @param {Object} UL or OL element
@@ -29,7 +29,7 @@ vxJS.widget.ddList = function(list) {
 
 	var moveEntries = function(e) {
 		var	c = this.getAllCoords(),
-			dragged = e.elem.element, next = vxJS.dom.nextNeighbor(dragged), prev = vxJS.dom.prevNeighbor(dragged),
+			dragged = e.elem.element, next = vxJS.dom.nextSameNodeNameSibling(dragged), prev = vxJS.dom.prevSameNodeNameSibling(dragged),
 			swap;
 
 		if(swap = (next && vxJS.dom.getElementOffset(next).add(c.grabSpot).y < c.oldPos.y)) {
