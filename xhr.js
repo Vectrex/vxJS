@@ -81,7 +81,10 @@ vxJS.xhr = function(req, param, anim, cb) {
 			if(xhrO.status >= 200 && xhrO.status < 300 || xhrO.status === 1223) {
 				abort();
 
-				if(req.forceXMLResponse) {
+				if(req.forcePlainTextResponse) {
+					that.response = xhrO.responseText;
+				}
+				else if(req.forceXMLResponse) {
 					that.response = xhrO.responseXML || xhrO.responseText;
 				}
 				else {
@@ -103,6 +106,8 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	var submit = function() {
+		var uri = encodeURI(req.uri || window.location.href);
+
 		abort();
 
 		param.httpRequest = req.command || "";
@@ -112,16 +117,21 @@ vxJS.xhr = function(req, param, anim, cb) {
 			xhrO.overrideMimeType("text/xml");
 		}
 
-		xhrO.open(	"POST",
-					encodeURI(req.uri || window.location.href),
-					true
-		);
-		xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-		xhrO.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-	
-		xhrO.onreadystatechange = stateChange;	
-		vxJS.event.serve(that, "beforeSend");
-		xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+		if(req.method && req.method.toUpperCase() == "GET") {
+			xhrO.open( "GET", uri += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime() + "&xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)), true);
+			xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			xhrO.onreadystatechange = stateChange;	
+			vxJS.event.serve(that, "beforeSend");
+			xhrO.send(null);
+		}
+		else {
+			xhrO.open("POST",uri, true);
+			xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			xhrO.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xhrO.onreadystatechange = stateChange;	
+			vxJS.event.serve(that, "beforeSend");
+			xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+		}
 		startTimer();
 	};
 
