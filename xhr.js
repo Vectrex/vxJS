@@ -8,7 +8,7 @@
  * 
  * @returns xhr object
  * 
- * @version 3.8.0a 2012-02-23
+ * @version 3.8.1 2012-03-03
  * @author Gregor Kofler
  * 
  * served events: "timeout", "complete", "fail", "beforeSend"
@@ -118,7 +118,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 		}
 
 		if(req.method && req.method.toUpperCase() == "GET") {
-			xhrO.open( "GET", uri += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime() + "&xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)), true);
+			xhrO.open( "GET", uri += (uri.indexOf("?") !== -1 ? "&" : "?") + (new Date()).getTime() + "&xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)), true);
 			xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 			xhrO.onreadystatechange = stateChange;	
 			vxJS.event.serve(that, "beforeSend");
