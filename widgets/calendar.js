@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.0.2 2011-03-10
+ * @version 2.0.3 2012-03-12
  * @author Gregor Kofler
  * 
  * @param {Object} (optional) formElem element receiving data value
@@ -395,7 +395,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		if(kc == 13) {
 			this.value = (marked || today).format(format);
 		}
-		if([9, 13, 27].indexOf !== -1) {
+		if([9, 13, 27].indexOf(kc) !== -1) {
 			docListener();
 		}
 	};
