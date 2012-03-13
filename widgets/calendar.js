@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.0.3 2012-03-12
+ * @version 2.2.0 2012-03-13
  * @author Gregor Kofler
  * 
  * @param {Object} (optional) formElem element receiving data value
@@ -29,6 +29,9 @@
  */
 
 vxJS.widget.calendar = function(formElem, config, xhrReq) {
+
+	"use strict";
+
 	if(typeof config !== "object") {
 		config = {};
 	}
@@ -36,8 +39,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	var	layer, shown, input, mNode = document.createTextNode(""), table, alignTo = config.alignTo || formElem, docFrag = document.createDocumentFragment(), that = {},
 		triggerListenerId, docListenerId, dayCells, weekCells,
 		now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-		marked = config.initDate && config.initDate.constructor === Date ? config.initDate : null,
-		day = (marked || today).getDate(), month = (marked || today).getMonth(), year = (marked || today).getFullYear(), 
+		marked = config.initDate && config.initDate.constructor === Date ? config.initDate : null, sheetDate,
 		locale = config.inputLocale || "date_de",
 		format = config.outputFormat || (locale === "date_de" ? "%D.%M.%Y" : "%Y-%M-%D"),
 		months = (config.months || "Jan Feb M\u00E4rz Apr Mai Juni Juli Aug Sept Okt Nov Dez").split(" "),
@@ -61,23 +63,17 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	var getElemDate = function() {
-		var val = formElem.value.trim();
+		var v = formElem.value.trim();
 
 		// cw/year?
-		if(/^\d\d?[ \/\-\.]+(?:\d{2}|\d{4})$/.test(val)) {
-			val	= val.split(/[ \/\-\.]+/);
-			marked	= getBeginOfCW(val[0], (""+year).slice(0, 4-val[1].length) + val[1], locale === "date_us");
-			day		= marked.getDate();
-			month	= marked.getMonth();
-			year	= marked.getFullYear();
+		if(/^\d\d?[ \/\-\.]+(?:\d{2}|\d{4})$/.test(v)) {
+			v	= v.split(/[ \/\-\.]+/);
+			return getBeginOfCW(v[0], (""+(marked || today).getFullYear()).slice(0, 4-v[1].length) + v[1], locale === "date_us");
 		}
 
 		// "normal" date
-		else if((val = val.toDateTime(locale, true))) {
-			marked	= val;
-			day		= val.getDate();
-			month	= val.getMonth();
-			year	= val.getFullYear();
+		else if((v = v.toDateTime(locale, true))) {
+			return v;
 		}
 	};
 
@@ -91,22 +87,35 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		}
 	};
 
+	var setSheetDate = function(d) {
+		if(!d || d.constructor !== Date) {
+			d = new Date();
+		}
+		if(sheetDate) {
+			sheetDate.setMonth(d.getMonth());
+			sheetDate.setFullYear(d.getFullYear());
+		}
+		else {
+			sheetDate = new Date(d.getFullYear(), d.getMonth(), 1);
+		}
+	};
+
 	var handleXhrResponse = function() {
-		var	r = this.response.entries, i, d, firstDay = dayCells[0].date, m = firstDay.getMonth(),
-			trail = m !== month ? new Date(firstDay.getFullYear(), m + 1, 0).getDate() - firstDay.getDate() : -1;
+		var	r = this.response.entries, l, d, firstDay = dayCells[0].date, m = firstDay.getMonth(),
+			trail = m !== sheetDate.getMonth() ? new Date(firstDay.getFullYear(), m + 1, 0).getDate() - firstDay.getDate() : -1;
 
 		xhrActive = false;
 		vxJS.dom.removeClassName(table, "xhrActive");
 
-		if(r && r.length) {
-			for(i = r.length; i--; ) {
-				if((d = +r[i].day) && d + trail >= 0 && dayCells[d + trail]) {
-					if(r[i].disabled) {
+		if(r && (l = r.length)) {
+			while(l--) {
+				if((d = +r[l].day) && d + trail >= 0 && dayCells[d + trail]) {
+					if(r[l].disabled) {
 						vxJS.dom.addClassName(dayCells[d + trail].elem, "disabled");
 						dayCells[d + trail].disabled = true;
 					}
-					if(r[i].label) {
-						dayCells[d + trail].elem.appendChild("div".create(r[i].label));
+					if(r[l].label) {
+						dayCells[d + trail].elem.appendChild("div".create(r[l].label));
 					}
 				}
 			}
@@ -115,30 +124,30 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 
 	var fillCalendar = function() {
 		var	w, r, i, cN, rows,
-			days = new Date(year, month + 1, 0).getDate(),
-			prevTrail = new Date(year, month, (locale === "date_us" ? 1 : 0) ).getDay(),
-			nextTrail = ((locale === "date_us" ? 6 : 7) - new Date(year, month + 1, 0).getDay()) % 7,
-			firstDay = new Date(year, month, 1 - prevTrail), loopDate;
+			m = sheetDate.getMonth(), y = sheetDate.getFullYear(), eom = new Date(y, m + 1, 0), days = eom.getDate(),
+			prevTrail = new Date(y, m, (locale === "date_us" ? 1 : 0) ).getDay(),
+			nextTrail = ((locale === "date_us" ? 6 : 7) - eom.getDay()) % 7,
+			firstDay = new Date(y, m, 1 - prevTrail), loopDate;
 		
 		if(config.noYearInput) {
-			mNode.nodeValue = months[month] + " " + year;
+			mNode.nodeValue = months[m] + " " + y;
 		}
 		else {
-			mNode.nodeValue = months[month];
-			input.value = year;
+			mNode.nodeValue = months[m];
+			input.value = y;
 		}
 
 		dayCells = [];
 		
 		for(i = -prevTrail + 1; i <= days + nextTrail; ++i) {
 			cN = [];
-			loopDate = new Date(year, month, i);
+			loopDate = new Date(y, m, i);
 
 			if(!((i + prevTrail - 1) % 7)) {
 				r = "tr".create();
 				docFrag.appendChild(r);
 			}
-			if(noPast && noPast > loopDate || noFuture && noFuture < loopDate) {
+			if((noPast && noPast > loopDate) || (noFuture && noFuture < loopDate)) {
 				cN.push("disabled");
 			}
 			if(i < 1 || i > days) {
@@ -180,7 +189,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		table.replaceChild("tbody".create(docFrag), table.childNodes[1]);
 
 		if(xhr) {
-			xhr.use(xhrReq, { date: year + "-" + ("0"+(month+1)).slice(-2) + "-01" });
+			xhr.use(xhrReq, { date: sheetDate.getFullYear() + "-" + ("0" + (sheetDate.getMonth() + 1)).slice(-2) + "-01" });
 			xhr.submit();
 			xhrActive = true;
 			vxJS.dom.addClassName(table, "xhrActive");
@@ -221,19 +230,19 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 				var y;
 				if(/^\d{2,}$/.test(this.value)) {
 					y = parseInt((""+new Date().getFullYear()).slice(0, 4-this.value.length) + this.value, 10);
-					if(y !== year) {
-						year = y;
+					if(y !== sheetDate.getFullYear()) {
+						sheetDate.setFullYear(y);
 						fillCalendar();
 						vxJS.event.serve(that, "yearChange");
 					}
 				}
-				this.value = year;
+				this.value = sheetDate.getFullYear();
 			});
 	
 			vxJS.event.addListener(input, "keydown", function(e) {
 				switch(e.keyCode) {
 					case 27:
-						this.value = year;
+						this.value = sheetDate.getFullYear();
 					case 13:
 						this.blur();
 				}
@@ -253,22 +262,25 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 
 			switch(c) {
 				case "prevMon":
-					if(--month < 0) { month = 11; year--; }
+					sheetDate.setMonth(sheetDate.getMonth() - 1);
 					fillCalendar();
 					type = "monthChange";
 					break;
+
 				case "nextMon":
-					if(++month > 11) { month = 0; year++; }
+					sheetDate.setMonth(sheetDate.getMonth() + 1);
 					fillCalendar();
 					type = "monthChange";
 					break;
+
 				case "prevYear":
-					year--;
+					sheetDate.setFullYear(sheetDate.getFullYear() - 1);
 					fillCalendar();
 					type = "yearChange";
 					break;
+
 				case "nextYear":
-					year++;
+					sheetDate.setFullYear(sheetDate.getFullYear() + 1);
 					fillCalendar();
 					type = "yearChange";
 					break;
@@ -301,9 +313,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			}
 			if(type) {
 				if(type === "datePick") {
-					day		= picked.getDate();
-					month	= picked.getMonth();
-					year	= picked.getFullYear();
+					marked = picked;
 
 					if(formElem) {
 						formElem.value = picked.format(format);
@@ -343,13 +353,19 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	var show = function() {
+		var v;
+
 		if(shown) {
 			return;
 		}
 		if(formElem) {
 			formElem.focus();
-			getElemDate();
+			v = getElemDate();
+			if(v) {
+				marked = v;
+			}
 		}
+		setSheetDate(marked);
 		fillCalendar();
 
 		if(alignTo) {
@@ -391,10 +407,17 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	var keydownListener = function(e) {
-		var kc = e.keyCode;
-		if(kc == 13) {
-			this.value = (marked || today).format(format);
+		var kc = e.keyCode, v;
+
+		if(kc == 13 && config.dontHide) {
+			v = getElemDate();
+			if(!marked || v.toString() != marked.toString()) {
+				marked = v;
+				setSheetDate(v);
+				fillCalendar();
+			}
 		}
+
 		if([9, 13, 27].indexOf(kc) !== -1) {
 			docListener();
 		}
@@ -408,7 +431,6 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		vxJS.event.addListener(xhr, "timeout", function() { xhrActive = false; vxJS.dom.removeClassName(table, "xhrActive"); });
 	}
 
-
 	if(config.trigger && !config.dontHide) {
 		triggerListenerId = vxJS.event.addListener(config.trigger, config.eType || "click", triggerListener);
 
@@ -420,7 +442,10 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	}
 	else {
 		if(formElem) {
-			getElemDate();
+			if(!marked) {
+				marked = getElemDate();
+			}
+			setSheetDate(marked);
 		}
 		fillCalendar();
 
@@ -428,6 +453,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			hide();
 		};
 	}
+
 	if(formElem) {
 		vxJS.event.addListener(formElem, "keydown", keydownListener);
 	}
@@ -443,7 +469,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	 * get currently selected date from calendar as date object
 	 */
 	that.getDate = function() {
-		return new Date(year, month, day);
+		return marked;
 	};
 
 	/**
@@ -452,11 +478,8 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	 */
 	that.setDate = function(d) {
 		if(d && d.constructor === Date && !isNaN(d)) {
-			day = d.getDate();
-			month = d.getMonth();
-			year = d.getFullYear();
-			marked = new Date(year, month, day);
-
+			marked = d;
+			setSheetDate(d);
 			fillCalendar();
 		}
 	};
