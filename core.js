@@ -88,7 +88,6 @@ Color.prototype = {
  * native object and prototype augmentation
  * 
  * Function.bind(newContext)
- * 
  * Array arr	= Object.keys()
  * Object obj	= Object.create()
  * Boolean res	= Array.isArray() 
