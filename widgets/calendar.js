@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.0 2012-03-13
+ * @version 2.2.1 2012-03-20
  * @author Gregor Kofler
  * 
  * @param {Object} (optional) formElem element receiving data value
@@ -482,6 +482,15 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			setSheetDate(d);
 			fillCalendar();
 		}
+	};
+
+	/**
+	 * explicitly clear marked calendar date
+	 */
+	that.clearDate = function() {
+		marked = null;
+		setSheetDate(today);
+		fillCalendar();
 	};
 
 	return that;
