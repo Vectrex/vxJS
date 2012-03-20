@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.1a 2012-03-03
+ * @version 0.4.2 2012-03-20
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -17,7 +17,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		columnFormat = [];
 	}
 
-	var	th, tb, rows = [],cols = [], h, w, activeColumn, origSort = [], that = {},
+	var	th, tb, rows = [],cols = [], w, activeColumn, origSort = [], that = {},
 		draggedRow, ind = {}, mouseUpId, mouseMoveId;
 
 	var removeIndicator = function() {
@@ -32,7 +32,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var hiliteColumn = function(col) {
-		var i = h;
+		var i = rows.length;
 
 		if (col) {
 			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
@@ -43,7 +43,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var loliteColumn = function(col) {
-		var i = h;
+		var i = rows.length;
 
 		if (col) {
 			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
@@ -144,7 +144,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var getColumnValues = function(ndx) {
-		var i = h, f = cols[ndx].format;
+		var i = rows.length, f = cols[ndx].format;
 
 		var valFuncs = {
 				"float":		function(v) { return (/^[+\-]?(?:\d{1,3}(?:[ ,\x27]\d{3})+|\d+)(?:\.\d+)?$/).test(v) ? v.replace(/[^0-9.\-]/g, "") : v; },
@@ -235,13 +235,13 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var prepare = function() {
-		var i;
+		var i, l;
 
-		if (table.nodeName === "TBODY") {
+		if (table.nodeName.toUpperCase() === "TBODY") {
 			tb = table;
 			table = tb.parentNode;
 		}
-		else if (table.nodeName === "TABLE") {
+		else if (table.nodeName.toUpperCase() === "TABLE") {
 			tb = table.tBodies[0];
 		}	
 		else {
@@ -255,9 +255,9 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		}
 
 		w = th.rows[0].cells.length;
-		h = tb.rows.length;
+		l = tb.rows.length;
 
-		for (i = 0; i < h; ++i) {
+		for (i = 0; i < l; ++i) {
 			origSort.push(tb.rows[i]);
 
 			rows.push({
@@ -289,9 +289,9 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	that.getCurrentOrder = function() {
-		var i, order = [];
+		var i, l = rows.length, order = [];
 		
-		for(i = 0; i < h; ++i) {
+		for(i = 0; i < l; ++i) {
 			order.push(origSort.indexOf(tb.rows[i]));
 		}
 		return order;
