@@ -14,6 +14,8 @@
  * @todo manual sort interferes with addRow(), removeRow()
  */
 vxJS.widget.sorTable = function(table, config) {
+	"use strict";
+
 	if(!config) {
 		config = {};
 	}
