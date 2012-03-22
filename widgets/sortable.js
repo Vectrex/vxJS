@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.4 2012-03-22
+ * @version 0.4.5 2012-03-22
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -13,11 +13,12 @@
  * 
  * @todo manual sort interferes with addRow(), removeRow()
  */
-vxJS.widget.sorTable = function(table, columnFormat) {
-
-	if(!columnFormat || !columnFormat.length) {
-		columnFormat = [];
+vxJS.widget.sorTable = function(table, config) {
+	if(!config) {
+		config = {};
 	}
+
+	var columnFormat = config.columnFormat && config.columnFormat.length ? config.columnFormat : [];
 
 	var	th, tb, rows = [], cols = [], w, activeColumn, origSort = [], that = {},
 		draggedRow, ind = {}, mouseUpId, mouseMoveId, clickListenerId;
@@ -37,6 +38,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		var i = rows.length;
 
 		if (col) {
+			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "desc" : "asc"));
 			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
 			while(i--) {
 				vxJS.dom.addClassName(rows[i].cells[col.ndx], "active");
@@ -319,6 +321,22 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		origSort.splice(origSort.indexOf(tr), 1);
 		rows.splice(rows.indexOf(tr), 1);
 		tb.removeChild(tr);
+	};
+
+	that.sortBy = function(colNdx, dir) {
+		var c = cols[colNdx];
+
+		if(!/^no_sort|manual$/.test(c.format)) {
+
+			c.asc = !dir || dir.toLowerCase() == "asc";
+
+			if(c !== activeColumn) {
+				loliteColumn(activeColumn);
+				activeColumn = c;
+			}
+			hiliteColumn(c);
+			doSort();
+		}
 	};
 
 	that.enableSort		= enableSort;
