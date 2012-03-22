@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.2 2012-03-20
+ * @version 0.4.4 2012-03-22
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -10,6 +10,8 @@
  * served events: "beginSort", "finishSort", "dragStart", "dragStop"
  * 
  * @todo provide optional column to sort upon startup
+ * 
+ * @todo manual sort interferes with addRow(), removeRow()
  */
 vxJS.widget.sorTable = function(table, columnFormat) {
 
@@ -17,8 +19,8 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		columnFormat = [];
 	}
 
-	var	th, tb, rows = [],cols = [], w, activeColumn, origSort = [], that = {},
-		draggedRow, ind = {}, mouseUpId, mouseMoveId;
+	var	th, tb, rows = [], cols = [], w, activeColumn, origSort = [], that = {},
+		draggedRow, ind = {}, mouseUpId, mouseMoveId, clickListenerId;
 
 	var removeIndicator = function() {
 		if(ind.above) {
@@ -37,7 +39,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		if (col) {
 			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
 			while(i--) {
-				vxJS.dom.addClassName(rows[i].elem.cells[col.ndx], "active");
+				vxJS.dom.addClassName(rows[i].cells[col.ndx], "active");
 			}
 		}
 	};
@@ -48,7 +50,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		if (col) {
 			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
 			while(i--) {
-				vxJS.dom.removeClassName(rows[i].elem.cells[col.ndx], "active");
+				vxJS.dom.removeClassName(rows[i].cells[col.ndx], "active");
 			}
 		}
 	};
@@ -144,7 +146,7 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 	};
 
 	var getColumnValues = function(ndx) {
-		var i = rows.length, f = cols[ndx].format;
+		var i = rows.length, f = cols[ndx].format, vals = [], r;
 
 		var valFuncs = {
 				"float":		function(v) { return (/^[+\-]?(?:\d{1,3}(?:[ ,\x27]\d{3})+|\d+)(?:\.\d+)?$/).test(v) ? v.replace(/[^0-9.\-]/g, "") : v; },
@@ -159,35 +161,40 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 
 		if(!f || typeof f == "function") {
 			while(i--) {
-				rows[i].sortValue = vxJS.dom.concatText(rows[i].elem.cells[ndx]).toLowerCase();
+				r = rows[i];
+				vals[i] = { element: r, value: vxJS.dom.concatText(r.cells[ndx]).toLowerCase() };
 			}
 		}
 		else {
 			while(i--) {
-				rows[i].sortValue = valFuncs[f](vxJS.dom.concatText(rows[i].elem.cells[ndx]), cols[ndx].format);
+				r = rows[i];
+				vals[i] = { element: r, value: valFuncs[f](vxJS.dom.concatText(rows[i].cells[ndx]), cols[ndx].format) };
 			}
 		}
+
+		return vals;
 	};
 
-	var buildTable = function() {
-		var t = document.createDocumentFragment(), i, l = rows.length;
+	var buildTable = function(vals) {
+		var t = document.createDocumentFragment(), i = 0;
 
-		for(i = 0; i < l; ++i) {
-			t.appendChild(rows[i].elem);
+		rows = [];
+		while(vals[i]) {
+			rows[i] = vals[i].element;
+			t.appendChild(rows[i++]);
 		}
 		tb.appendChild(t);
 	};
 
 	var doSort = function() {
-
 		var cbSort = function() {
 			var s = this.asc ? 1 : -1;
 
 			if(/^(?:float|float_comma)$/.test(this.format)) {
 				return function(a, b) {
-					a = +a.sortValue;
+					a = +a.value;
 					if(isNaN(a)) { return 1; }
-					b = +b.sortValue;
+					b = +b.value;
 					if(isNaN(b)) { return -1; }
 					if(a === b) { return 0; }
 					return a < b ? -s : s;
@@ -195,15 +202,19 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 			}
 
 			return function(a, b) {
-				if(a.sortValue === b.sortValue) { return 0; }
-				return a.sortValue < b.sortValue ? -s : s;
+				if(a.value === b.value) { return 0; }
+				return a.value < b.value ? -s : s;
 			};
 		};
 
 		vxJS.event.serve(that, "beginSort");
-		getColumnValues(activeColumn.ndx);
-		rows.sort(typeof activeColumn.format == "function" ? activeColumn.format.bind(activeColumn) : cbSort.bind(activeColumn)());
-		buildTable();
+
+		buildTable(
+			getColumnValues(activeColumn.ndx).
+				sort(typeof activeColumn.format == "function" ? activeColumn.format.bind(activeColumn) : cbSort.bind(activeColumn)()
+			)
+		);
+
 		vxJS.event.serve(that, "finishSort");
 	};
 
@@ -213,29 +224,41 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		while(!/th|td/i.test(n.nodeName) && n.parentNode) {
 			n = n.parentNode;
 		}
-		
-		
+
 		if(typeof (ndx = n.cellIndex) == "undefined") {
 			return;
 		}
 		c = cols[ndx];
-		if(/^no_sort|manual$/.test(c.format)) {
-			return;
+		if(!/^no_sort|manual$/.test(c.format)) {
+			loliteColumn(activeColumn);
+			if(c === activeColumn) {
+				c.asc = !c.asc;
+			}
+			else {
+				activeColumn = c;
+			}
+			hiliteColumn(c);
+			doSort();
 		}
-
-		loliteColumn(activeColumn);
-		if(c === activeColumn) {
-			c.asc = !c.asc;
+	};
+	
+	var enableSort = function() {
+		if(!clickListenerId) {
+			clickListenerId = vxJS.event.addListener(th, "click", sortOnClick);
+			vxJS.dom.removeClassName(th, "disabled");
 		}
-		else {
-			activeColumn = c;
-		}
-		hiliteColumn(c);
-		doSort();
 	};
 
-	var prepare = function() {
-		var i, l;
+	var disableSort = function() {
+		if(clickListenerId) {
+			vxJS.event.removeListener(clickListenerId);
+			vxJS.dom.addClassName(th, "disabled");
+			clickListenerId = null;
+		}
+	};
+
+	(function() {
+		var i;
 
 		if (table.nodeName.toUpperCase() === "TBODY") {
 			tb = table;
@@ -255,22 +278,9 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		}
 
 		w = th.rows[0].cells.length;
-		l = tb.rows.length;
 
-		for (i = 0; i < l; ++i) {
-			origSort.push(tb.rows[i]);
-
-			rows.push({
-				elem: tb.rows[i],
-				sortValue: null
-			});
-		}
-
-		vxJS.event.addListener(th, "click", sortOnClick);
-	};
-
-	var analyzeColumns = function() {
-		var i;
+		rows = vxJS.collectionToArray(tb.rows);
+		origSort = [].concat(rows);
 
 		if(columnFormat.indexOf("manual") !== -1) {
 			vxJS.event.addListener(tb, "mousedown", startDrag);
@@ -279,10 +289,9 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		for (i = 0; i < w; ++i) {
 			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
 		}
-	};
-
-	prepare();
-	analyzeColumns();
+		
+		enableSort();
+	}());
 
 	that.getActiveColumn = function() {
 		return activeColumn;
@@ -297,9 +306,25 @@ vxJS.widget.sorTable = function(table, columnFormat) {
 		return order;
 	};
 
-	that.reSort = doSort;
+	that.insertRow = function(tr, ndx) {
+		if(+ndx > rows.length || typeof ndx == "undefined") {
+			ndx = rows.length - 1;
+		}
+		origSort.splice(ndx, 0, tr);
+		rows.splice(ndx, 0, tr);
+		tb.insertBefore(tr, rows[ndx + 1]);
+	};
 
-	that.element = tb;
+	that.removeRow = function(tr) {
+		origSort.splice(origSort.indexOf(tr), 1);
+		rows.splice(rows.indexOf(tr), 1);
+		tb.removeChild(tr);
+	};
+
+	that.enableSort		= enableSort;
+	that.disableSort	= disableSort;
+	that.reSort			= doSort;
+	that.element		= tb;
 
 	return that;
 };
