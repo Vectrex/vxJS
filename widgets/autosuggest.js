@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.4a 2012-02-09
+ * @version 0.6.5 2012-03-27
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
@@ -16,7 +16,7 @@
  *	customShow:	{Function} callback function applying fx, when element is shown
  *	customHide:	{Function} callback function applying fx, when element is hidden
  *
- * served events: "choose", "show", "hide", "submitNoMatch"
+ * served events: "choose", "showWidget", "hideWidget", "submitNoMatch"
  */
 
 vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
@@ -88,7 +88,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 				layer.style.display = "";
 			}
 			shown = true;
-			vxJS.event.serve(that, "show");
+			vxJS.event.serve(that, "showWidget");
 		}
 	};
 
@@ -101,7 +101,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 				layer.style.display = "none";
 			}
 			shown = false;
-			vxJS.event.serve(that, "hide");
+			vxJS.event.serve(that, "hideWidget");
 		}
 	};
 	

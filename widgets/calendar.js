@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.1 2012-03-20
+ * @version 2.2.2 2012-03-27
  * @author Gregor Kofler
  * 
  * @param {Object} (optional) formElem element receiving data value
@@ -25,7 +25,7 @@
  * 
  * @return {Object} calendar widget
  * 
- * served events: "datePick", "monthChange", "yearChange", "show", "hide"
+ * served events: "datePick", "monthChange", "yearChange", "showWidget", "hideWidget"
  */
 
 vxJS.widget.calendar = function(formElem, config, xhrReq) {
@@ -359,7 +359,6 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			return;
 		}
 		if(formElem) {
-			formElem.focus();
 			v = getElemDate();
 			if(v) {
 				marked = v;
@@ -379,7 +378,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		}
 
 		shown = true;
-		vxJS.event.serve(that, "show");
+		vxJS.event.serve(that, "showWidget");
 	};
 
 	var hide = function() {
@@ -391,7 +390,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 				layer.style.display = "none";
 			}
 			shown = false;
-			vxJS.event.serve(that, "hide");
+			vxJS.event.serve(that, "hideWidget");
 		}
 	};
 

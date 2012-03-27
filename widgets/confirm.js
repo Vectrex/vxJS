@@ -5,7 +5,7 @@
  * 
  * focus events of input, textarea, select and a elements are "captured"
  * 
- * @version 0.1.5 2011-09-03
+ * @version 0.1.6 2012-03-27
  * @author Gregor Kofler
  *
  * @param {Object} configuration (all properties are optional)
@@ -17,7 +17,7 @@
  *
  * @return {Object} confirm object
  * 
- * served events: show, hide, buttonClick, focusLost
+ * served events: "showWidget", "hideWidget", "buttonClick", "focusLost"
  * 
  * @todo beautify IE6 position=fixed
  */
@@ -168,7 +168,7 @@ vxJS.widget.confirm = function() {
 				buttons[0].element.focus();
 			}
 
-			vxJS.event.serve(that, "show");
+			vxJS.event.serve(that, "showWidget");
 
 			if(+c.timeout) {
 				timeoutId = window.setTimeout(hide, c.timeout * 1000);
@@ -189,7 +189,7 @@ vxJS.widget.confirm = function() {
 				overlay.hide();
 			}
 			elem = body.removeChild(elem);
-			vxJS.event.serve(that, "hide");
+			vxJS.event.serve(that, "hideWidget");
 
 			window.clearTimeout(timeoutId);
 		};
