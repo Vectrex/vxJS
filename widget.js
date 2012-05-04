@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.10a 2012-02-23
+ * @version 0.6.10b 2012-05-04
  * @author Gregor Kofler
  *
  * currently providing
@@ -220,7 +220,7 @@ vxJS.widget.shared = {
 
 		var hiLite = function(n) {
 			if(n !== ul) {
-				setCurrent(n.nodeName !== "LI" ? vxJS.dom.getParentElement(n, "li") : n);
+				setCurrent(n.nodeName.toUpperCase() !== "LI" ? vxJS.dom.getParentElement(n, "li") : n);
 			}
 		};
 
@@ -280,7 +280,7 @@ vxJS.widget.shared = {
 
 		var click = function() {
 			if(this !== ul) {
-				toggleSelected(this.nodeName !== "LI" ? vxJS.dom.getParentElement(this, "li") : this);
+				toggleSelected(this.nodeName.toUpperCase() !== "LI" ? vxJS.dom.getParentElement(this, "li") : this);
 			}
 		};
 

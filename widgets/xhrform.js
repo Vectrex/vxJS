@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  * 
- * @version 0.3.3 2012-02-10
+ * @version 0.3.3a 2012-05-04
  * @author Gregor Kofler, info@gregorkofler.at
  * 
  * @param {Object} form element
@@ -384,7 +384,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	that.addSubmit = function(elem) {
 		var f;
 
-		if(elem.nodeName === "INPUT" && (!(f = elem.form || vxJS.dom.getParentElement(elem, "form")) || f !== form)) {
+		if(elem.nodeName.toUpperCase() === "INPUT" && (!(f = elem.form || vxJS.dom.getParentElement(elem, "form")) || f !== form)) {
 			throw Error("widget.xhrForm: form element not found!");
 		}
 

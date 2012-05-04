@@ -1,7 +1,7 @@
 /**
  * (un-)fold screen sections with an "accordion" effect
  * 
- * @version 0.2.4 2010-07-20
+ * @version 0.2.4a 2012-05-04
  * @author Gregor Kofler
  * 
  * @param {Object} container element, defaults to document
@@ -84,7 +84,7 @@ vxJS.widget.accordion = function(root, config) {
 				vxJS.event.addListener(container, "click", function(group) {
 
 					return function() {
-						var i, t, n = this.nodeName !== nn ? vxJS.dom.getParentElement(this, nn) : this;
+						var i, t, n = this.nodeName.toUpperCase() !== nn ? vxJS.dom.getParentElement(this, nn) : this;
 
 						if(!n) {
 							return;
