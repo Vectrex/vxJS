@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.5 2012-03-27
+ * @version 0.6.6 2012-05-04
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
@@ -217,11 +217,11 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			case 13:
 				if(shown) {
 					handleChoose();
+					vxJS.event.preventDefault(e);
 				}
 				else {
 					vxJS.event.serve(that, "submitNoMatch");
 				}
-				vxJS.event.preventDefault(e);
 				break;
 
 			default:
