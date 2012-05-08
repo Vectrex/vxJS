@@ -1,20 +1,21 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.6 2012-05-04
+ * @version 0.6.7 2012-05-08
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
  * @param {Object} xhr request object containing command and URI
  * @param {Object} config additional parameters to configure dropdown
- *	maxEntries:	{Number} max entries in list
- *	keyElem:	{Object} optional input element for storing key values
- *	keyProp:	{String} property name, which identifies the property stored as key value
- *	searchMode:	{Boolean} switches from suggest to search mode
- *	restrict:	{Boolean} restrict to provided entries when true (suggest mode only)
- *	minLength:	{Number} minimum length of search string, which triggers a request (search mode only)
- *	customShow:	{Function} callback function applying fx, when element is shown
- *	customHide:	{Function} callback function applying fx, when element is hidden
+ *	maxEntries:			{Number} max entries in list
+ *	keyElem:			{Object} optional input element for storing key values
+ *	keyProp:			{String} property name, which identifies the property stored as key value
+ *	searchMode:			{Boolean} switches from suggest to search mode
+ *	restrict:			{Boolean} restrict to provided entries when true (suggest mode only)
+ *	minLength:			{Number} minimum length of search string, which triggers a request (search mode only)
+ *	customShow:			{Function} callback function applying fx, when element is shown
+ *	customHide:			{Function} callback function applying fx, when element is hidden
+ *	enterIsCancelled:	{Boolean} when true, and no list shown, the default action of the enter key will be prevented
  *
  * served events: "choose", "showWidget", "hideWidget", "submitNoMatch"
  */
@@ -221,6 +222,9 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 				}
 				else {
 					vxJS.event.serve(that, "submitNoMatch");
+					if(config.enterIsCancelled) {
+						vxJS.event.preventDefault(e);
+					}
 				}
 				break;
 
