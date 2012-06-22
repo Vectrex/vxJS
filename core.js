@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.0.0 2012-06-22
+ * @version 2.0.1 2012-06-22
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -932,7 +932,7 @@ if(!this.vxJS) {
 			addListener: function(obj, type, cb) {
 				var n = "__ID__" + (regNdx++), f, nat, elem = obj.element;
 
-				if(nat = (obj.ownerDocument && obj.ownerDocument === doc || obj === doc || obj === win || elem && !this.isCustomEvent(elem, type))) {
+				if(nat = (obj.nodeType && obj.nodeType === 1 || obj === doc || obj === win || elem && !this.isCustomEvent(elem, type))) {
 					switch (model) {
 						case "W3C":
 							(elem || obj).addEventListener(type, f = function(e) { cb.apply(e.target, [e, obj]); }, false);
