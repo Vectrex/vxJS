@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 1.9.1a 2012-03-03
+ * @version 2.0.0 2012-06-22
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -630,6 +630,66 @@ if(!this.vxJS) {
 		return Array.prototype.slice.call(o, 0);
 	};
 
+	/**
+	 * localStorage for IE lifted, simplified and updated from Wojo Design's solution
+	 * https://github.com/wojodesign/local-storage-js/blob/master/storage.js
+	 */
+	if(!global.localStorage) {
+		var div = "div".create(), attrKey = "localStorage";
+
+		div.style.display = "none";
+		doc.getElementsByTagName("head")[0].appendChild(div); // body not available yet
+
+		if(div.addBehavior) {
+			div.addBehavior("#default#userdata");
+
+			div.load(attrKey);
+
+			global.localStorage = {
+				setItem: function(key , val) {
+					div.load(attrKey);
+				
+					if(!div.getAttribute(key)){
+						++this.length;
+					}
+					div.setAttribute(key , val);
+					div.save(attrKey);
+				},
+
+				getItem: function(key) {
+					div.load(attrKey);
+					return div.getAttribute(key);
+				},
+
+				removeItem: function(key) {
+					div.load(attrKey);
+					div.removeAttribute(key);
+					div.save(attrKey);
+					if(this.length) {
+						--this.length;
+					}
+				},
+
+				clear: function() {
+					var i = 0, attr;
+					div.load(attrKey);
+					while (attr = div.XMLDocument.documentElement.attributes[i++]) {
+						div.removeAttribute(attr.name);
+					}
+					div.save(attrKey);
+					this.length = 0;
+				},
+
+				key: function(key){
+					div.load(attrKey);
+					return div.XMLDocument.documentElement.attributes[key];
+				},
+
+				length: div.XMLDocument.documentElement.attributes.length
+			};
+		} 
+	}
+	
 	/**
 	 * wrapper functionality for both DOM elements and widgets,
 	 * allowing fx, drag and drop, etc.
