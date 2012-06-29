@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.0.1 2012-06-22
+ * @version 2.0.2 2012-06-26
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -627,7 +627,11 @@ if(!this.vxJS) {
 	};
 
 	var collectionToArray = function(o) {
-		return Array.prototype.slice.call(o, 0);
+		var a = [], l = o.length, i = 0;
+		for(; i < l;) {
+			a.push(o[i++]);
+		}
+		return a;
 	};
 
 	/**
