@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.10b 2012-05-04
+ * @version 0.6.11 2012-07-02
  * @author Gregor Kofler
  *
  * currently providing
@@ -87,7 +87,7 @@ vxJS.widget.shared = {
 	 */
 	hiLite: function(text, node, cN) {
 
-		var	rex = new RegExp(text, "gi"), fixRex = new RegExp("^" + text, "i"),
+		var	rex = new RegExp(text, "gi"), fixRex = new RegExp("^" + text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "i"),
 			chunks, hits, frag = document.createDocumentFragment(), i;
 
 		if(!cN)		{ cN = "hiLite"; }
