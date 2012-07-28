@@ -507,14 +507,24 @@ String.prototype.create = function(children) {
  */
 String.prototype.setProp = function(n, v) {
 	var i, s = new String(this);
+
 	if (!s.attr) { s.attr = []; }
 
-	if (arguments.length > 1) {
+	if(arguments.length > 1) {
 		s.attr.push({name: n, value: v});
 	}
-	else if (arguments.length === 1 && Array.isArray(n)) {
-		for (i = n.length; i--;) {
-			s.attr.push({name : n[i][0], value : n[i][1]});
+	if(arguments.length === 1) {
+		if(Array.isArray(n)) {
+			for (i = n.length; i--;) {
+				s.attr.push({name : n[i][0], value : n[i][1]});
+			}
+		}
+		else if(typeof n === "object") {
+			for(i in n) {
+				if(n.hasOwnProperty(i)) {
+					s.attr.push( { name: i, value: n[i] } );
+				}
+			}
 		}
 	}
 	return s;
