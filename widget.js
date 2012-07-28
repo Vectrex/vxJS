@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.11 2012-07-02
+ * @version 0.6.12 2012-07-28
  * @author Gregor Kofler
  *
  * currently providing
@@ -147,7 +147,7 @@ vxJS.widget.shared = {
 
 		for(i = 0, j = 0, l = r.length; l--; ++j) {
 			if(r[j].style.display !== "none") {
-				r[j].className = c[i++ % c.length];
+				r[j].className = [r[j].className.replace(new RegExp("(^| )(" + c.join("|") +")( |$)"), ""), c[i++ % c.length]].join(" ");
 			}
 		}
 	},
