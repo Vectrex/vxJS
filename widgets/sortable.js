@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.7 2012-03-25
+ * @version 0.4.8 2012-08-23
  * @author Gregor Kofler
  * 
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -246,59 +246,12 @@ vxJS.widget.sorTable = function(table, config) {
 		}
 	};
 	
-	var enableSort = function() {
-		if(!clickListenerId) {
-			clickListenerId = vxJS.event.addListener(th, "click", sortOnClick);
-			vxJS.dom.removeClassName(th, "disabled");
-		}
-	};
-
-	var disableSort = function() {
-		if(clickListenerId) {
-			vxJS.event.removeListener(clickListenerId);
-			vxJS.dom.addClassName(th, "disabled");
-			clickListenerId = null;
-		}
-	};
-
-	(function() {
-		var i;
-
-		if (table.nodeName.toUpperCase() === "TBODY") {
-			tb = table;
-			table = tb.parentNode;
-		}
-		else if (table.nodeName.toUpperCase() === "TABLE") {
-			tb = table.tBodies[0];
-		}	
-		else {
-			throw new Error("vxJS.widget.sorTable: No valid table or tbody element.");
-		}
-
-		if(!(th = table.getElementsByTagName("thead")[0])) {
-			th = "thead".create();
-			tb.parentNode.insertBefore(th, tb);
-			th.appendChild(tb.rows[0]);
-		}
-
-		w = th.rows[0].cells.length;
-
-		rows = vxJS.collectionToArray(tb.rows);
-		origSort = [].concat(rows);
-
-		if(columnFormat.indexOf("manual") !== -1) {
-			vxJS.event.addListener(tb, "mousedown", startDrag);
-		}
-
-		for (i = 0; i < w; ++i) {
-			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
-		}
-
-		enableSort();
-	}());
-
 	that.getActiveColumn = function() {
 		return activeColumn;
+	};
+
+	that.initOrder = function() {
+		origSort = [].concat(vxJS.collectionToArray(tb.rows));
 	};
 
 	that.getCurrentOrder = function() {
@@ -367,10 +320,60 @@ vxJS.widget.sorTable = function(table, config) {
 		}
 	};
 
-	that.enableSort		= enableSort;
-	that.disableSort	= disableSort;
-	that.reSort			= doSort;
-	that.element		= tb;
+	that.enableSort = function() {
+		if(!clickListenerId) {
+			clickListenerId = vxJS.event.addListener(th, "click", sortOnClick);
+			vxJS.dom.removeClassName(th, "disabled");
+		}
+	};
+
+	that.disableSort = function() {
+		if(clickListenerId) {
+			vxJS.event.removeListener(clickListenerId);
+			vxJS.dom.addClassName(th, "disabled");
+			clickListenerId = null;
+		}
+	}
+
+	that.reSort = doSort;
+
+	(function() {
+		var i;
+
+		if (table.nodeName.toUpperCase() === "TBODY") {
+			tb = table;
+			table = tb.parentNode;
+		}
+		else if (table.nodeName.toUpperCase() === "TABLE") {
+			tb = table.tBodies[0];
+		}	
+		else {
+			throw new Error("vxJS.widget.sorTable: No valid table or tbody element.");
+		}
+
+		if(!(th = table.getElementsByTagName("thead")[0])) {
+			th = "thead".create();
+			tb.parentNode.insertBefore(th, tb);
+			th.appendChild(tb.rows[0]);
+		}
+
+		w = th.rows[0].cells.length;
+
+		rows = vxJS.collectionToArray(tb.rows);
+
+		if(columnFormat.indexOf("manual") !== -1) {
+			vxJS.event.addListener(tb, "mousedown", startDrag);
+		}
+
+		for (i = 0; i < w; ++i) {
+			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
+		}
+
+		that.initOrder();
+		that.enableSort();
+	}());
+
+	that.element = tb;
 
 	return that;
 };
