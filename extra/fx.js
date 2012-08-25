@@ -1,7 +1,7 @@
 /**
  * vxJS.fx simple effects library
  * @author Gregor Kofler
- * @version 0.4.8 2011-03-13
+ * @version 0.4.9 2012-08-25
  * 
  * entries in registry {
  * 	element:	DOM object reference,
@@ -152,7 +152,7 @@ vxJS.fx.moveRelative = {
 		if(!+p.duration) {
 			p.duration = 1;
 		}
-		if(vxJS.dom.getStyle(e, "position") !== "absolute") {
+		if(["relative", "absolute", "fixed"].indexOf(vxJS.dom.getStyle(e, "position")) === -1) {
 			e.style.position = "relative";
 		}
 		p.from = vxJS.dom.getElementPosition(e);
