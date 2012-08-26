@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  * 
- * @version 0.3.3a 2012-05-04
+ * @version 0.3.4 2012-08-26
  * @author Gregor Kofler, info@gregorkofler.at
  * 
  * @param {Object} form element
@@ -24,7 +24,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	}
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
-		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout,
+		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
 		submittingElement, ifrm, submittedByApp, submittingNow,
 		xhr = vxJS.xhr(xhrReq), lastXhrResponse, xhrImgSize,
 		xhrImg = function() {
@@ -319,39 +319,40 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		clearMsgBoxes();
 		clearErrors();
 
-		if((cmd = r.command)) {
-			setErrors([]);
-			if(cmd == "redirect" && r.location) {
-				window.location.href = r.location;
-				return;
-			}
-			if(cmd == "submit") {
-				if(apcHidden) {
-					apcPoll();
+		if(r) {
+			if((cmd = r.command)) {
+				if(cmd == "redirect" && r.location) {
+					window.location.href = r.location;
+					return;
 				}
-				posXhrImg();
-				xhrImg.style.display = "";
-				submittedByApp = true;
-				disableSubmit();
-				form.submit();
-				return;
+				if(cmd == "submit") {
+					if(apcHidden) {
+						apcPoll();
+					}
+					posXhrImg();
+					xhrImg.style.display = "";
+					submittedByApp = true;
+					disableSubmit();
+					form.submit();
+					return;
+				}
 			}
-		}
-
-		if(r.elements) {
-			for(i = r.elements.length; i--;) {
-				n = r.elements[i].name;
-				if(r.elements[i].value) { v.push({name: n, value: r.elements[i].value }); }
-				if(r.elements[i].error) { e.push({name: n, text: r.elements[i].errorText || null}); }  
+	
+			if(r.elements) {
+				for(i = r.elements.length; i--;) {
+					n = r.elements[i].name;
+					if(r.elements[i].value) { v.push({name: n, value: r.elements[i].value }); }
+					if(r.elements[i].error) { e.push({name: n, text: r.elements[i].errorText || null}); }  
+				}
+				setValues(v);
+				setErrors(e);
 			}
-			setValues(v);
-			setErrors(e);
-		}
-		
-		if((m = r.msgBoxes)) {
-			for (i = m.length; i--;) {
-				if(m[i].id && (c = findMsgBox(m[i].id))) {
-					c.appendChild(vxJS.dom.parse(m[i].elements));
+			
+			if((m = r.msgBoxes)) {
+				for (i = m.length; i--;) {
+					if(m[i].id && (c = findMsgBox(m[i].id))) {
+						c.appendChild(vxJS.dom.parse(m[i].elements));
+					}
 				}
 			}
 		}
@@ -371,20 +372,23 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		submittingElement = this;
 
 		vxJS.event.serve(that, "beforeSubmit");
-		
-		posXhrImg();
 
-		v = getValues(form.elements, this);
-		vxJS.merge(v, payload);
-
-		xhr.use(null, { elements: v }, { node: xhrImg });
-		xhr.submit();
+		if(immediateSubmit) {
+			handleXhrResponse( { command: "submit"} );
+		}
+		else {
+			posXhrImg();
+	
+			v = getValues(form.elements, this);
+			vxJS.merge(v, payload);
+	
+			xhr.use(null, { elements: v }, { node: xhrImg });
+			xhr.submit();
+		}
 	};
 
 	that.addSubmit = function(elem) {
-		var f;
-
-		if(elem.nodeName.toUpperCase() === "INPUT" && (!(f = elem.form || vxJS.dom.getParentElement(elem, "form")) || f !== form)) {
+		if(elem.nodeName.toUpperCase() === "INPUT" && elem.form !== form) {
 			throw Error("widget.xhrForm: form element not found!");
 		}
 
@@ -427,6 +431,14 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 		xhr.use(null, { elements: getValues(form.elements, this) }, { node: null } );
 		xhr.submit();
+	};
+
+	that.disableImmediateSubmit = function() {
+		immediateSubmit = false;
+	};
+
+	that.enableImmediateSubmit = function() {
+		immediateSubmit = true;
 	};
 
 	that.enableApcUpload = function() {
