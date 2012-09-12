@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.0.3 2012-07-28
+ * @version 2.0.4 2012-09-12
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -187,13 +187,13 @@ if(!Array.prototype.filter) {
 		var i = 0, l = this.length, r = [], v;  
 		for(; i < l; ++i) {
 			if (i in this) {
-				v = this[i];  
+				v = this[i];
 				if(f.call(that, v, i, this)) {  
 					r.push(v);
 				}
 			}  
-			return r;  
 		}
+		return r;  
 	};
 }
 
