@@ -8,7 +8,7 @@
  * 
  * @returns xhr object
  * 
- * @version 3.8.1 2012-03-03
+ * @version 3.8.2 2012-11-09
  * @author Gregor Kofler
  * 
  * served events: "timeout", "complete", "fail", "beforeSend"
@@ -106,7 +106,8 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	var submit = function() {
-		var uri = encodeURI(req.uri || window.location.href);
+		var l = window.location,
+			uri = encodeURI(req.uri || (l.hash ? l.href.substring(0, l.href.indexOf(l.hash)) : l.href));
 
 		abort();
 
