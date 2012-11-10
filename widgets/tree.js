@@ -1,7 +1,7 @@
 /**
  * Tree
  * 
- * @version 0.5.0pre, 2011-11-22
+ * @version 0.5.0, 2012-11-10
  * @author Gregor Kofler
  *
  * @param {Object} config object
