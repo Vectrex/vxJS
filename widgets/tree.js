@@ -37,7 +37,7 @@ vxJS.widget.tree = function(config) {
 	 * Tree object
 	 */
 	var Tree = function(level, ul) {
-		this.element = ul || "ul".create();
+		this.element = ul || document.createElement("ul");
 		vxJS.dom.addClassName(this.element, "vxJS_tree");
 		this.level = level || 0;
 		this.branches = [];
@@ -195,7 +195,7 @@ vxJS.widget.tree = function(config) {
 	var Branch = function(tree, data) {
 		var p;
 
-		this.element = "li".create();
+		this.element = document.createElement("li");
 		this.tree = tree;
 
 		for(p in data) {
@@ -309,7 +309,7 @@ vxJS.widget.tree = function(config) {
 					cn = "partChecked";
 			}
 			if(!this.cbElem) {
-				this.cbElem = "span".create();
+				this.cbElem = document.createElement("span");
 			}
 			this.cbElem.className = cn + " __check__" + (this.disabled ? " disabled" : ""); 
 		},
@@ -335,7 +335,7 @@ vxJS.widget.tree = function(config) {
 				cn = "leafNode";
 			}
 			if(!this.nodeElem) {
-				this.nodeElem = "span".create();
+				this.nodeElem = document.createElement("span");
 			}
 			this.nodeElem.className = cn;
 		},
@@ -362,9 +362,12 @@ vxJS.widget.tree = function(config) {
 				li.appendChild(this.cbElem);
 			}
 
-			this.label = "div".setProp("class", "__label__").create(vxJS.dom.parse(this.elements));
+			this.label = document.createElement("div");
+			this.label.className = "__label__";
+			this.label.appendChild(vxJS.dom.parse(this.elements));
+//			this.label = "div".setProp("class", "__label__").create(vxJS.dom.parse(this.elements));
 			li.appendChild(this.label);
-			this.element = li;
+//			this.element = li;
 
 			return li;
 		}
