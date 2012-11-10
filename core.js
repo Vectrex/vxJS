@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.0.4 2012-09-12
+ * @version 2.0.5 2012-11-10
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -952,7 +952,7 @@ if(!this.vxJS) {
 							(elem || obj).addEventListener(type, f = function(e) { cb.apply(e.target, [e, obj]); }, false);
 							break;
 						case "MS":
-							(elem || obj).attachEvent("on"+type, f = function() { cb.apply(global.event.srcElement, [global.event, obj]); });
+							(elem || obj).attachEvent("on"+type, f = function(e) { cb.apply((e || global.event).srcElement, [e || global.event, obj]); });
 							break;
 						default:
 							f = addLegacyListener(obj, type);
@@ -1485,18 +1485,20 @@ if(!this.vxJS) {
 		},
 
 		parse: function(elem) {
+			var d = document.createDocumentFragment(), i, l;
+
 			var insertTree = function(n, p) {
 				var i, l, e, pr = n.properties, d;
 
 				if(n.node) {
-					e = n.node.create();
+					e = document.createElement(n.node);
 				}
 				else if(n.text){
 					p.appendChild(document.createTextNode(n.text));
 					return;
 				}
 				else if(n.html) {
-					d = "div".create();
+					d = document.createElement("div");
 					d.innerHTML = n.html;
 					while(d.firstChild) {
 						p.appendChild(d.firstChild);
@@ -1514,12 +1516,7 @@ if(!this.vxJS) {
 				if (typeof pr === "object") {
 					for (i in pr) {
 						if (pr.hasOwnProperty(i)) {
-							if(i === "text") {
-								e.appendChild(document.createTextNode(pr[i]));
-							}
-							else {
-								e[i] = pr[i];
-							}
+							i === "text" ? e.appendChild(document.createTextNode(pr[i])) : e[i] = pr[i];
 						}
 					}
 				}
@@ -1531,9 +1528,8 @@ if(!this.vxJS) {
 				p.appendChild(e);
 			};
 
-			var d = document.createDocumentFragment(), i;
 			if(Array.isArray(elem)) {
-				for(i = 0; i < elem.length; i++) {
+				for(i = 0, l = elem.length; i < l; ++i) {
 					insertTree(elem[i], d);
 				}
 			}
