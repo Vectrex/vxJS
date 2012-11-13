@@ -1,7 +1,7 @@
 /**
  * Tree
  * 
- * @version 0.5.0, 2012-11-10
+ * @version 0.5.1, 2012-11-13
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -94,7 +94,6 @@ vxJS.widget.tree = function(config) {
 		},
 
 		insertBranch: function(b, pos) {
-
 		},
 
 		addBranches: function(b) {
@@ -531,6 +530,10 @@ vxJS.widget.tree = function(config) {
 
 	that.getActiveBranch = function() {
 		return activeBranch;
+	};
+
+	that.getRootTree = function() {
+		return tree;
 	};
 
 	return that;
