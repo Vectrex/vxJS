@@ -5,7 +5,7 @@
  * 
  * focus events of input, textarea, select and a elements are "captured"
  * 
- * @version 0.1.6 2012-03-27
+ * @version 0.1.7 2012-11-15
  * @author Gregor Kofler
  *
  * @param {Object} configuration (all properties are optional)
@@ -144,6 +144,8 @@ vxJS.widget.confirm = function() {
 		};
 
 		var show = function() {
+			var pos;
+
 			if(shown) {
 				return;
 			}
