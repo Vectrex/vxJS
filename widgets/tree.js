@@ -1,7 +1,7 @@
 /**
  * Tree
  * 
- * @version 0.5.1, 2012-11-13
+ * @version 0.6.0, 2012-11-17
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -15,6 +15,7 @@
  *
  * events served:
  *	branchClick
+ *	labelClick
  *	beforeNodeClick
  *	afterNodeClick
  *	beforeCheckBoxClick
@@ -24,7 +25,6 @@
  * 
  * @todo handling of "disabled" property
  * @todo alternatively add "hashes" to speed up tree traversal
- * @todo add tree.insertBranch()
  */
 
 vxJS.widget.tree = function(config) {
@@ -66,41 +66,88 @@ vxJS.widget.tree = function(config) {
 
 		appendBranch: function(data) {
 			var b = new Branch(this, data);
+
+			b.element.className = "lastBranch";
+			if(this.last) {
+				this.last.element.className = "";
+			}
+
 			this.branches.push(b);
 			this.last = b;
 			b.pos = this.branches.length - 1;
+			this.element.appendChild(b.element);
 		},
 
 		removeBranch: function(ndx) {
-			b = this.branches, l;
+			var branches = this.branches, l = branches.length, e;
 
 			if(ndx instanceof Branch) {
-				l = b.length;
 				while(l--) {
-					if(b[l] == ndx) {
+					if(branches[l] === ndx) {
 						ndx = l;
 						break;
 					}
 				}
 			}
+
 			if(typeof ndx == "number") {
-				b.splice(ndx, 1);
-				l = b.length;
-				while(ndx < l) {
-					b[ndx].pos = ndx++;
+				e = branches[ndx].element;
+
+				if(e && e.parentNode) {
+					e.parentNode.removeChild(e);
 				}
-				this.last = b[l - 1];
+
+				branches.splice(ndx, 1);
+
+				if((l = branches.length)) {
+					while(ndx < l) {
+						branches[ndx++].pos--;
+					}
+
+					this.last = branches[l - 1];
+					this.last.className = "lastBranch";
+				}
+				else {
+					this.last = null;
+				}
 			}
 		},
 
-		insertBranch: function(b, pos) {
+		truncate: function() {
+			var c;
+
+			while((c = this.element.firstChild)) {
+				this.element.removeChild(c);
+			}
+			this.branches = [];
 		},
 
-		addBranches: function(b) {
-			var i = 0, l = b.length;
+		insertBranch: function(data, ndx) {
+			var branches = this.branches, l = branches.length - 1, b, e;
+
+			if(ndx > l) {
+				return;
+			}
+			if(ndx == l) {
+				this.appendBranch(data);
+			}
+
+			e = branches[ndx].element;
+			b = new Branch(this, data);
+			branches.splice(ndx, 0, b);
+
+			while(ndx <= l) {
+				branches[ndx].pos = ndx++;
+			}
+
+			this.element.insertBefore(b.element, e);
+		},
+
+		addBranches: function(branches) {
+			var i = 0, l = branches.length;
 
 			while(i < l) {
-				this.appendBranch(b[i++]);
+				this.appendBranch(branches[i++]);
 			}
 		},
 
@@ -167,11 +214,12 @@ vxJS.widget.tree = function(config) {
 
 			for(i = 0; i < l; ++i) {
 				b = this.branches[i];
-				b.render();
+
 				if(b.subtree) {
 					b.subtree.render();
 					this.onlyLeaves = false;
 				}
+
 				this.element.appendChild(b.element);
 			}
 
@@ -192,30 +240,46 @@ vxJS.widget.tree = function(config) {
 	 * Branch object
 	 */
 	var Branch = function(tree, data) {
-		var p;
+		var p, hasSubtree;
 
 		this.element = document.createElement("li");
 		this.tree = tree;
-
+		
 		for(p in data) {
 			if(p == "branches" && data.branches.length) {
-				this.appendSubTree(data.branches);
+				hasSubtree = true;
 			}
 			else if(data.hasOwnProperty(p)) {
 				this[p] = data[p];
 			}
 		}
 
-		if(typeof this.terminates == "undefined" && config.leafNodeDefault && (!data.branches || !data.branches.length)) {
+		if(typeof this.terminates == "undefined" && config.leafNodeDefault && !hasSubtree) {
 			this.terminates = true;
 		}
 
 		if(typeof this.hasCheckBox == "undefined") {
 			this.hasCheckBox = checkBoxes === true || (checkBoxes == "last" && this.terminates);
 		}
+
+		this.render();
+
+		if(hasSubtree) {
+			this.appendSubTree(data.branches);
+		}
+
+		this.renderNode();
 	};
 
 	Branch.prototype = {
+		insertBefore: function(data) {
+			this.tree.insertBranch(data, this.pos - 1);
+		},
+
+		insertAfter: function(data) {
+			this.tree.insertBranch(data, this.pos + 1);
+		},
+
 		appendSubTree: function(b) {
 			this.subtree = new Tree(this.tree.level + 1, null);
 			this.subtree.parent = this;
@@ -224,7 +288,7 @@ vxJS.widget.tree = function(config) {
 			}
 			this.element.appendChild(this.subtree.element);
 		},
-		
+
 		removeSubTree: function() {
 			var e;
 
@@ -240,13 +304,7 @@ vxJS.widget.tree = function(config) {
 
 		toggleSubTree: function() {
 			var s = this.subtree;
-
-			if(!s || s.element.style.display == "none") {
-				this.showSubTree();
-			}
-			else {
-				this.hideSubTree();
-			}
+			!s || s.element.style.display == "none" ? this.showSubTree() : this.hideSubTree();
 		},
 
 		hideSubTree: function() {
@@ -289,28 +347,16 @@ vxJS.widget.tree = function(config) {
 			this.cbState = !this.cbState ? 1 : 0;
 			this.renderCheckBox();
 		},
-		
-		renderCheckBox: function() {
-			var cn;
 
+		renderCheckBox: function() {
 			if(!this.hasCheckBox) {
 				return;
 			}
 
-			switch (+this.cbState) {
-				case 1:
-					cn = "checked";
-					break;
-				case 0:
-					cn = "unChecked";
-					break;
-				case 2:
-					cn = "partChecked";
-			}
 			if(!this.cbElem) {
 				this.cbElem = document.createElement("span");
 			}
-			this.cbElem.className = cn + " __check__" + (this.disabled ? " disabled" : ""); 
+			this.cbElem.className = ["unChecked", "checked", "partChecked"][+this.cbState] + " __check__" + (this.disabled ? " disabled" : ""); 
 		},
 
 		renderNode: function() {
@@ -333,9 +379,7 @@ vxJS.widget.tree = function(config) {
 			else {
 				cn = "leafNode";
 			}
-			if(!this.nodeElem) {
-				this.nodeElem = document.createElement("span");
-			}
+
 			this.nodeElem.className = cn;
 		},
 
@@ -344,31 +388,32 @@ vxJS.widget.tree = function(config) {
 
 			li.className = this.tree.last === this ? "lastBranch" : "";
 
-			this.renderNode();
-			li.appendChild(this.nodeElem);
+			// was not rendered before
 
-			if(this.hasCheckBox) {
-//			if(checkBoxes == "last" && this.nodeElem.className.indexOf("leafNode") != -1 || checkBoxes == true) {
-				if(typeof this.cbState == "undefined") {
-					if(cbDependence && this.tree.parent && this.tree.parent.cbState && this.tree.parent.cbState !== 2) {
-						this.cbState = this.tree.parent.cbState;
+			if(!this.labelElem) {
+
+				this.nodeElem = document.createElement("span");
+				li.appendChild(this.nodeElem);
+
+				if(this.hasCheckBox) {
+	//			if(checkBoxes == "last" && this.nodeElem.className.indexOf("leafNode") != -1 || checkBoxes == true) {
+					if(typeof this.cbState == "undefined") {
+						if(cbDependence && this.tree.parent && this.tree.parent.cbState && this.tree.parent.cbState !== 2) {
+							this.cbState = this.tree.parent.cbState;
+						}
+						else {
+							this.cbState = 0;
+						}
 					}
-					else {
-						this.cbState = 0;
-					}
+					this.renderCheckBox();
+					li.appendChild(this.cbElem);
 				}
-				this.renderCheckBox();
-				li.appendChild(this.cbElem);
+	
+				this.labelElem = document.createElement("div");
+				this.labelElem.className = "__label__";
+				this.labelElem.appendChild(vxJS.dom.parse(this.elements));
+				li.appendChild(this.labelElem);
 			}
-
-			this.label = document.createElement("div");
-			this.label.className = "__label__";
-			this.label.appendChild(vxJS.dom.parse(this.elements));
-//			this.label = "div".setProp("class", "__label__").create(vxJS.dom.parse(this.elements));
-			li.appendChild(this.label);
-//			this.element = li;
-
-			return li;
 		}
 	};
 
@@ -416,36 +461,41 @@ vxJS.widget.tree = function(config) {
 	};
 
 	var handleClick = function() {
-		var c, li, b;
+		var c, b;
 
-		if(/disabled/.test(this.className)) { return; }
+		// @todo filter or speed up search
 
-		if((c = this.className.match(/(?:\s|^)((?:__node__)|(?:__check__)|(?:__label__))(?:\s|$)/i))) {
-			
-			li = vxJS.dom.getParentElement(this, "li");
+		if(!(b = tree.findBranchByElem(vxJS.dom.getParentElement(this, "li"))) || b.disabled) {
+			return;
+		}
 
-			if(!(b = tree.findBranchByElem(li))) {
-				return;
+		activeBranch = b;
+		vxJS.event.serve(that, "branchClick", { branch: b});
+
+		if(b.nodeElem && this === b.nodeElem) {
+			vxJS.event.serve(that, "beforeNodeClick", { branch: b });
+			b.toggleSubTree();
+			vxJS.event.serve(that, "afterNodeClick", { branch: b });
+		}
+
+		else if(b.cbElem && this === b.cbElem) {
+			vxJS.event.serve(that, "beforeCheckBoxClick", { branch: b });
+			b.toggleCheckBox();
+			if(cbDependence) {
+				b.propagateCheckBox();
+				b.tree.setParentCheckBox();
 			}
+			vxJS.event.serve(that, "afterCheckBoxClick", { branch: b });
+		}
 
-			activeBranch = b;
-			vxJS.event.serve(that, "branchClick", { branch: b});
-
-			switch(c[1]) {
-				case "__node__":
-					vxJS.event.serve(that, "beforeNodeClick", { branch: b});
-					b.toggleSubTree();
-					vxJS.event.serve(that, "afterNodeClick", { branch: b});
+		else {
+			c = this;
+			while(c !== b.element) {
+				c = c.parentNode;
+				if(c === b.labelElem) {
+					vxJS.event.serve(that, "labelClick", { branch: b });
 					break;
-				case "__check__":
-					vxJS.event.serve(that, "beforeCheckBoxClick", { branch: b});
-					b.toggleCheckBox();
-					if(cbDependence) {
-						b.propagateCheckBox();
-						b.tree.setParentCheckBox();
-					}
-					vxJS.event.serve(that, "afterCheckBoxClick", { branch: b});
-					break;
+				}
 			}
 		}
 	};
@@ -459,7 +509,7 @@ vxJS.widget.tree = function(config) {
 		tree.addBranches(config.branches || []);
 	}
 	tree.expandToLevel(config.expandTo);
-	tree.render();
+//	tree.render();
 
 	if(config.container) {
 		config.container.appendChild(tree.element);
