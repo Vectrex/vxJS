@@ -8,7 +8,7 @@
  * 
  * @returns xhr object
  * 
- * @version 3.8.2 2012-11-09
+ * @version 3.8.3 2012-11-09
  * @author Gregor Kofler
  * 
  * served events: "timeout", "complete", "fail", "beforeSend"
@@ -47,7 +47,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 			window.clearTimeout(timer);
 		}
 		if(anim.node) {
-			anim.node.style.display = "none";
+			vxJS.dom.removeClassName(anim.node, "active");
 		}
 	};
 
@@ -72,7 +72,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 				}, timeout);
 		}
 		if(anim.node) {
-			anim.node.style.display = "";
+			vxJS.dom.addClassName(anim.node, "active");
 		}
 	};
 
