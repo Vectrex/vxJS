@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.7 2012-05-08
+ * @version 0.6.8 2013-01-14
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
@@ -37,6 +37,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			l.style.display = "none";
 			return l;
 		}(),
+		generateEntriesCallback,
 		xhr = vxJS.xhr(xhrReq || {}, { limit: config.maxEntries || 10, text: "" }),
 		xhrImg = function() {
 			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
@@ -149,7 +150,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	};
 
 	var initRequest = function() {
-		var p, s, v = elem.value;
+		var p, s, v = elem.value, response;
 
 		if(sentString === v.toUpperCase()) {
 			return;
@@ -160,19 +161,34 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			return;
 		}
 
-		if(!xhrImgSize) {
-			xhrImgSize = vxJS.dom.getElementSize(xhrImg);
-		}
-		p = vxJS.dom.getElementOffset(elem);
-		s = vxJS.dom.getElementSize(elem);
-		p.x += s.x-xhrImgSize.x-4;
-		p.y += (s.y-xhrImgSize.y)/2;
-		vxJS.dom.setElementPosition(xhrImg, p);
-
 		sentString = v.toUpperCase();
+		
+		// if provided retrieve matching suggestions not from server, but by custom callback
 
-		xhr.use(null, { text: v }, { node: xhrImg });
-		xhr.submit();
+		if(generateEntriesCallback) {
+			handleXhrResponse.call({
+				response: generateEntriesCallback( {
+					text: v,
+					limit: config.maxEntries || 10
+				} )
+			});
+		}
+
+		// else retrieve data by XHR
+
+		else {
+			if(!xhrImgSize) {
+				xhrImgSize = vxJS.dom.getElementSize(xhrImg);
+			}
+			p = vxJS.dom.getElementOffset(elem);
+			s = vxJS.dom.getElementSize(elem);
+			p.x += s.x-xhrImgSize.x-4;
+			p.y += (s.y-xhrImgSize.y)/2;
+			vxJS.dom.setElementPosition(xhrImg, p);
+	
+			xhr.use(null, { text: v }, { node: xhrImg });
+			xhr.submit();
+		}
 	};
 
 	var handleChoose = function() {
@@ -263,7 +279,9 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 
 	that.element = layer;
 	that.xhr = xhr;
-	that.getChosen = function() { return chosen; };
+
+	that.setGenerateEntriesCallback	= function(cb) { generateEntriesCallback = cb; };
+	that.getChosen					= function() { return chosen; };
 
 	return that;
 };
