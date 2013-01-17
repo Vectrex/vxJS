@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.2 2012-03-27
+ * @version 2.2.3 2013-01-17
  * @author Gregor Kofler
  * 
  * @param {Object} (optional) formElem element receiving data value
@@ -197,7 +197,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	var createCalendar = function() {
-		var d, bar = ["span".setProp("class", "prevMon").create("\u00AB"), "span".setProp("class", "mon").create(mNode), "span".setProp("class", "nextMon").create("\u00BB") ];
+		var d, bar = ["span".setProp("class", "prevMon").create(), "span".setProp("class", "mon").create(mNode), "span".setProp("class", "nextMon").create() ];
 
 		table	= "table".create(["thead".create(), "tbody".create()]);
 
