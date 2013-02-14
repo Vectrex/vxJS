@@ -649,7 +649,7 @@ if(!this.vxJS) {
 	 * https://github.com/wojodesign/local-storage-js/blob/master/storage.js
 	 */
 	if(!global.localStorage) {
-		var div = "div".create(), attrKey = "localStorage";
+		var div = document.createElement("div"), attrKey = "localStorage";
 
 		div.style.display = "none";
 		doc.getElementsByTagName("head")[0].appendChild(div); // body not available yet
