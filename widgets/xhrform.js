@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  * 
- * @version 0.3.4 2012-08-26
+ * @version 0.3.5 2013-02-19
  * @author Gregor Kofler, info@gregorkofler.at
  * 
  * @param {Object} form element
@@ -81,7 +81,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	var prepareIfu = function() {
-		var action = form.action, div, s, name = "ifu_" + Math.uuid();
+		var action = form.action, div, s, name = "ifu_" + new Date().getTime();
 
 		if(ifrm) { return; }
 
