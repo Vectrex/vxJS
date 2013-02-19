@@ -2,7 +2,7 @@
  * core script for vxJS framework
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.0.5 2012-11-10
+ * @version 2.1.0 2013-02-19
  * 
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -98,9 +98,6 @@ Color.prototype = {
  * Array arr	= Array.prototype.map(callback[,this])
  * Array arr	= Array.prototype.filter(callback[,this])
  * Array.prototype.forEach(callback[,this])
- * 
- * Number sign	= Math.sgn(number)
- * String uuid	= Math.uuid()
  * 
  * String formatted Number = Number.toFormattedString(Number decimals, String dec_point, String thousands_sep)
  * (locale-free alternative for Number.toLocaleString()) 
@@ -227,26 +224,6 @@ else {
 	};
 }
 
-Math.sgn = function(n){
-	n = typeof n !== "number"? parseFloat(n) : n;
-	if(isNaN(n)) {
-		return NaN;
-	}
-	return n < 0 ? -1 : 1;
-};
-
-Math.uuid = function() {
-	var u = [], r, i = 36;
-	u[8] = u[13] = u[18] = u[23] = "-"; u[14] = "4";
-	while(i--) {
-		if(!u[i]) {
-			r = 0 | Math.random() * 16;
-			u[i] = "0123456789ABCDEF"[i == 19 ? (r & 0x3 | 0x8) : r];
-		}
-	}
-	return u.join("");
-};
-
 Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 	var f, p, t = "";
 
@@ -264,7 +241,7 @@ Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 		}
 		p[0] = p[0]+t;
 	}
-	return (Math.sgn(this) < 0 ? "-" : "") + p[0] + (p[1] ? (decPoint + p[1]) : "");
+	return (this < 0 ? "-" : "") + p[0] + (p[1] ? (decPoint + p[1]) : "");
 };
 
 if(!String.prototype.trim) {
@@ -577,7 +554,7 @@ Array.prototype.domWrapWithTag = function(tag) {
 };
 
 /**
- * the namespaced functions
+ * namespaced objects
  */
 if(!this.vxJS) {
 	var vxJS = {};
