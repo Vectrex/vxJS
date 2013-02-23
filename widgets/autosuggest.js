@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  * 
- * @version 0.6.8 2013-01-14
+ * @version 0.6.8 2013-02-23
  * @author Gregor Kofler
  * 
  * @param {Object} elem input element
@@ -37,7 +37,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			l.style.display = "none";
 			return l;
 		}(),
-		generateEntriesCallback,
+		generateEntriesCallback, mousedownOnList,
 		xhr = vxJS.xhr(xhrReq || {}, { limit: config.maxEntries || 10, text: "" }),
 		xhrImg = function() {
 			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
@@ -268,14 +268,27 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	elem.setAttribute("autocomplete", "off");
 	vxJS.dom.getBody().appendChild(layer);
 
-	vxJS.event.addListener(elem, "keydown",	handleKeyDown);
-	vxJS.event.addListener(elem, "keyup",	handleKeyUp);
-	vxJS.event.addListener(elem, "blur",	hide);
+	vxJS.event.addListener(elem,	"keydown",		handleKeyDown);
+	vxJS.event.addListener(elem,	"keyup",		handleKeyUp);
 
-	vxJS.event.addListener(list, "choose",	handleChoose);
+	// workaround required for IE and Chrome, which lose focus, when scrollbar of list is clicked
 
-	vxJS.event.addListener(xhr, "complete",	handleXhrResponse);
-	vxJS.event.addListener(xhr, "timeout", function() { window.alert("Response took to long!");});
+	vxJS.event.addListener(layer,	"mousedown", 	function() { mousedownOnList = true; });
+	vxJS.event.addListener(layer,	"mouseup", 		function() { mousedownOnList = false; });
+	vxJS.event.addListener(elem,	"blur",			function() {
+														if(!mousedownOnList) {
+															hide();
+														}
+														else {
+															elem.focus();
+															mousedownOnList = false;
+														}
+													});
+
+	vxJS.event.addListener(list,	"choose",		handleChoose);
+
+	vxJS.event.addListener(xhr,		"complete",		handleXhrResponse);
+	vxJS.event.addListener(xhr,		"timeout",		function() { window.alert("Response took to long!");});
 
 	that.element = layer;
 	that.xhr = xhr;
