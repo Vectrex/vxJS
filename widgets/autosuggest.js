@@ -1,9 +1,9 @@
 /**
  * autoSuggest
- * 
- * @version 0.6.8 2013-02-23
+ *
+ * @version 0.6.9 2013-02-25
  * @author Gregor Kofler
- * 
+ *
  * @param {Object} elem input element
  * @param {Object} xhr request object containing command and URI
  * @param {Object} config additional parameters to configure dropdown
@@ -25,7 +25,10 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	config = config || {};
 
 	var	typeAheadTimeout = 250, timeoutId,
-		keyProp = config.keyProp || "key", keyElem = config.keyElem, enableTypeAhead, keyListened, sentString, chosen, that = {}, shown,
+		keyProp = config.keyProp || "key", keyElem = config.keyElem,
+		minLength = typeof config.minLength == "undefined" ? 3 : +config.minLength,
+
+		enableTypeAhead, keyListened, sentString, chosen, that = {}, shown,
 		searchMode = !!config.searchMode,
 		initData = {
 			text: elem.value,
@@ -53,7 +56,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			keyElem.value = v[keyProp];
 		}
 	};
-	
+
 	var placeLayer = function() {
 		var ePos = vxJS.dom.getElementOffset(elem), eSize = vxJS.dom.getElementSize(elem),
 			scroll = vxJS.dom.getDocumentScroll(), size, s = layer.style, y;
@@ -106,7 +109,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			vxJS.event.serve(that, "hideWidget");
 		}
 	};
-	
+
 	var handleXhrResponse = function() {
 		var txt, r = this.response, v = elem.value.toUpperCase(), i;
 
@@ -135,7 +138,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 		if(config.restrict) {
 			txt = r.entries[0].text.toUpperCase();
 			while(v.length && txt.indexOf(v) != 0) {
-				v = v.slice(0, -1);			
+				v = v.slice(0, -1);
 			}
 			sentString = v;
 		}
@@ -156,13 +159,13 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			return;
 		}
 
-		if(!v || (searchMode && v.length < (config.minLength || 3))) {
+		if(/*!v || */(searchMode && v.length < minLength)) {
 			hide();
 			return;
 		}
 
 		sentString = v.toUpperCase();
-		
+
 		// if provided retrieve matching suggestions not from server, but by custom callback
 
 		if(generateEntriesCallback) {
@@ -185,7 +188,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			p.x += s.x-xhrImgSize.x-4;
 			p.y += (s.y-xhrImgSize.y)/2;
 			vxJS.dom.setElementPosition(xhrImg, p);
-	
+
 			xhr.use(null, { text: v }, { node: xhrImg });
 			xhr.submit();
 		}
@@ -252,7 +255,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	var handleKeyUp = function(e) {
 		var kc = e.keyCode;
 
-		if(elem.value.toUpperCase() != sentString) {
+		if(elem.value.toUpperCase() !== sentString) {
 			sentString = null;
 		}
 
