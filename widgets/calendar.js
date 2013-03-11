@@ -1,15 +1,15 @@
 /**
  * calendar widget
- * @version 2.2.3 2013-01-17
+ * @version 2.2.4 2013-03-11
  * @author Gregor Kofler
- * 
+ *
  * @param {Object} (optional) formElem element receiving data value
  *
  * @param {Object} configuration (optional)
  * 	trigger:		{Object} triggering element
  *	eType:			{String} event type
  *	dontHide:		{Boolean} show permanently
- *  initDate:		{Object} initial date value	
+ *  initDate:		{Object} initial date value
  *	noPast:			{Boolean|Date} allows only future dates | date after Date
  *	noFuture:		{Boolean|Date} allows only past dates | date before Date
  *	showCw:			{Boolean} have calendar weeks displayed
@@ -22,9 +22,9 @@
  *	alignTo:		{Object} element to which the calendar gets aligned to, defaults to formElem
  *
  * @param {Object} XHR Parameters for adding additional via XHR retrieved information
- * 
+ *
  * @return {Object} calendar widget
- * 
+ *
  * served events: "datePick", "monthChange", "yearChange", "showWidget", "hideWidget"
  */
 
@@ -55,7 +55,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	// US style not implemented yet
 	var getBeginOfCW = function(cw, year, usStyle) {
 		year = year || new Date().getFullYear();
-			
+
 		var	b = new Date(year, 0, 1),
 			c = (cw - 1) * 7 + 1,
 			d = b.getDay() || 7;
@@ -128,7 +128,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			prevTrail = new Date(y, m, (locale === "date_us" ? 1 : 0) ).getDay(),
 			nextTrail = ((locale === "date_us" ? 6 : 7) - eom.getDay()) % 7,
 			firstDay = new Date(y, m, 1 - prevTrail), loopDate;
-		
+
 		if(config.noYearInput) {
 			mNode.nodeValue = months[m] + " " + y;
 		}
@@ -138,7 +138,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		}
 
 		dayCells = [];
-		
+
 		for(i = -prevTrail + 1; i <= days + nextTrail; ++i) {
 			cN = [];
 			loopDate = new Date(y, m, i);
@@ -205,7 +205,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			input = "input".setProp([["maxLength", 4], ["class", "year"]]).create();
 			bar = ["div".setProp("class", "selMon").create(bar), "div".setProp("class", "selYear").create(["span".setProp("class", "prevYear").create("\u00AB"), input,"span".setProp("class", "nextYear").create("\u00BB")])];
 		}
- 
+
 		layer = "div".setProp("class", config.skinClass || "vxJS_calendar").create("div".create(["div".setProp("class", "vxJS_dragBar").create(bar), table]));
 
 		switch(locale) {
@@ -238,7 +238,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 				}
 				this.value = sheetDate.getFullYear();
 			});
-	
+
 			vxJS.event.addListener(input, "keydown", function(e) {
 				switch(e.keyCode) {
 					case 27:
@@ -300,7 +300,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 							type = "datePick";
 						}
 						else {
-							c = dayCells[(n.parentNode.rowIndex - 1) * 7 + n.cellIndex]; 
+							c = dayCells[(n.parentNode.rowIndex - 1) * 7 + n.cellIndex];
 							if(!c.disabled) {
 								picked = c.date;
 								type = "datePick";
@@ -446,6 +446,9 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			}
 			setSheetDate(marked);
 		}
+		else {
+			setSheetDate();
+		}
 		fillCalendar();
 
 		docListener = function() {
@@ -456,7 +459,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	if(formElem) {
 		vxJS.event.addListener(formElem, "keydown", keydownListener);
 	}
-	
+
 	/**
 	 * expose container element, show(), hide()
 	 */
