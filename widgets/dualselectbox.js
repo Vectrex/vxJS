@@ -2,11 +2,11 @@
  * DualSelectBox
  * attach a second select box to an already existing one
  * allow shifting of entries between both
- * 
- * @version 0.5.5 2012-02-11
- * 
+ *
+ * @version 0.5.6 2013-04-03
+ *
  * @param {object} existing select box, becomes destination box
- * 
+ *
  */
 vxJS.widget.dualSelectBox = function(destBox) {
 	var container = "span".setProp("class", "vxJS_dualSelectBox").create(), srcBox;
@@ -34,7 +34,7 @@ vxJS.widget.dualSelectBox = function(destBox) {
 		}
 		for (i = src.options.length; i--;) {
 			src.options[i] = null;
-		} 
+		}
 		src.selectedIndex = -1;
 	};
 
@@ -60,16 +60,16 @@ vxJS.widget.dualSelectBox = function(destBox) {
 		}
 
 		vxJS.dom.deleteChildNodes(destBox);
-		shiftSelectedOptions(srcBox, destBox);	
+		shiftSelectedOptions(srcBox, destBox);
 		container.insertBefore(srcBox, destBox);
 	};
 
 
 	var createShiftButtons = function() {
-		var addAll	= "button".setProp([["type", "button"], ["class", "addAll"]]).create("\u00bb");
-		var subAll	= "button".setProp([["type", "button"], ["class", "subAll"]]).create("\u00ab");
-		var add		= "button".setProp([["type", "button"], ["class", "add"]]).create(">");
-		var sub		= "button".setProp([["type", "button"], ["class", "sub"]]).create("<");
+		var addAll	= "button".setProp([["type", "button"], ["class", "addAll"]]).create();
+		var subAll	= "button".setProp([["type", "button"], ["class", "subAll"]]).create();
+		var add		= "button".setProp([["type", "button"], ["class", "add"]]).create();
+		var sub		= "button".setProp([["type", "button"], ["class", "sub"]]).create();
 		var bar		= "span".setProp("class", "vxJS_dualSelectBox_buttons").create([addAll, add, sub, subAll]);
 
 		vxJS.event.addListener(add,	"click", function() { shiftSelectedOptions(srcBox, destBox); });
