@@ -1,19 +1,19 @@
 /**
  * xhrForm
- * 
+ *
  * submits form values via XHR
  * responses can trigger a "normal" submit, a redirect or
  * will contain objects with name of elements, new values and
  * possible error messages
- * 
- * @version 0.3.5 2013-02-19
+ *
+ * @version 0.3.6 2013-08-29
  * @author Gregor Kofler, info@gregorkofler.at
- * 
+ *
  * @param {Object} form element
  * @param {Object} xhr request configuration object
- * 
+ *
  * @todo improve enableSubmit(), disableSubmit()
- * 
+ *
  * served events: "ifuResponse", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
  */
 
@@ -65,7 +65,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		if(submittedByApp) {
 			try			{ response = JSON.parse((ifrm.contentDocument || ifrm.contentWindow.document).body.innerHTML); }
 			catch(e)	{ response = {}; }
-	
+
 			if(apcPollTimeout) {
 				window.clearTimeout(apcPollTimeout);
 				hideApcInfo();
@@ -127,7 +127,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 				case 'radio':
 				case 'checkbox':
-					e.checked = v[i].value ? true : false;
+					e.checked = !!v[i].value;
 			}
 		}
 	};
@@ -188,14 +188,14 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 							v = e.value;
 						}
 						break;
-						
+
 					case "textarea":
 					case "text":
 					case "password":
 					case "hidden":
 						v = e.value;
 						break;
-						
+
 					case "select-multiple":
 						if(vxJS.dom.hasClassName(e, "vxJS_dualSelectBox_source")) {
 							continue;
@@ -221,18 +221,26 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 						}
 				}
 				if (v !== null) {
-					vals[e.name] = v;
+					if(!vals[e.name]) {
+						vals[e.name] = v;
+					}
+					else {
+						if(!Array.isArray(vals[e.name])) {
+							vals[e.name] = [vals[e.name]];
+						}
+						vals[e.name].push(v);
+					}
 				}
 			}
 		}
 
 		return vals;
 	};
-	
+
 	var clearMsgBoxes = function() {
 		msgBoxes.forEach(function(b) {vxJS.dom.deleteChildNodes(b.container);});
 	};
-	
+
 	var findMsgBox = function(id) {
 		for(var i = msgBoxes.length; i--;) {
 			if (id === msgBoxes[i].id) {
@@ -302,13 +310,13 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			else {
 				xhr.use();
 			}
-			apcPollTimeout = window.setTimeout(arguments.callee, 1000); 
+			apcPollTimeout = window.setTimeout(arguments.callee, 1000);
 		})();
 	};
 
 	/**
 	 * handle response
-	 * 
+	 *
 	 * can handle commands (redirect, submit),
 	 * set values of elements and corresponding errors
 	 * fill message boxes, serve event
@@ -337,17 +345,17 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 					return;
 				}
 			}
-	
+
 			if(r.elements) {
 				for(i = r.elements.length; i--;) {
 					n = r.elements[i].name;
 					if(r.elements[i].value) { v.push({name: n, value: r.elements[i].value }); }
-					if(r.elements[i].error) { e.push({name: n, text: r.elements[i].errorText || null}); }  
+					if(r.elements[i].error) { e.push({name: n, text: r.elements[i].errorText || null}); }
 				}
 				setValues(v);
 				setErrors(e);
 			}
-			
+
 			if((m = r.msgBoxes)) {
 				for (i = m.length; i--;) {
 					if(m[i].id && (c = findMsgBox(m[i].id))) {
@@ -363,7 +371,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 	var handleClick = function(e) {
 		var v;
-		
+
 		vxJS.event.preventDefault(e);
 
 		if(submittingNow) {
@@ -378,10 +386,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		}
 		else {
 			posXhrImg();
-	
+
 			v = getValues(form.elements, this);
 			vxJS.merge(v, payload);
-	
+
 			xhr.use(null, { elements: v }, { node: xhrImg });
 			xhr.submit();
 		}
