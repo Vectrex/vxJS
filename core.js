@@ -1,17 +1,17 @@
 /**
  * core script for vxJS framework
- * 
+ *
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.1.0 2013-02-19
- * 
+ * @version 2.1.1 2013-09-16
+ *
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
- *  
+ *
  * @todo purgeEvents() for removing listeners before removing DOM nodes
  * @todo cw us style
  * @todo gEBCN() for multiple class names
  * @todo optimize serve/custom event handling
- */ 
+ */
 
 /**
  * Coord object
@@ -86,11 +86,11 @@ Color.prototype = {
 
 /**
  * native object and prototype augmentation
- * 
+ *
  * Function.bind(newContext)
  * Array arr	= Object.keys()
  * Object obj	= Object.create()
- * Boolean res	= Array.isArray() 
+ * Boolean res	= Array.isArray()
  * Boolean res	= Array.prototype.inArray(needle)
  * number pos	= Array.prototype.indexOf(needle)
  * Array arr	= Array.prototype.copy()
@@ -98,10 +98,10 @@ Color.prototype = {
  * Array arr	= Array.prototype.map(callback[,this])
  * Array arr	= Array.prototype.filter(callback[,this])
  * Array.prototype.forEach(callback[,this])
- * 
+ *
  * String formatted Number = Number.toFormattedString(Number decimals, String dec_point, String thousands_sep)
- * (locale-free alternative for Number.toLocaleString()) 
- * 
+ * (locale-free alternative for Number.toLocaleString())
+ *
  * String str	= String.trim()
  * String str	= String.lpad()
  * String str	= String.rpad()
@@ -179,18 +179,18 @@ if(!Array.prototype.map) {
 	};
 }
 
-if(!Array.prototype.filter) {  
-	Array.prototype.filter = function(f, that) {  
-		var i = 0, l = this.length, r = [], v;  
+if(!Array.prototype.filter) {
+	Array.prototype.filter = function(f, that) {
+		var i = 0, l = this.length, r = [], v;
 		for(; i < l; ++i) {
 			if (i in this) {
 				v = this[i];
-				if(f.call(that, v, i, this)) {  
+				if(f.call(that, v, i, this)) {
 					r.push(v);
 				}
-			}  
+			}
 		}
-		return r;  
+		return r;
 	};
 }
 
@@ -330,7 +330,7 @@ String.prototype.toDateTime = function(locale, asObj) {
 			if(asObj) { return new Date(j, m-1, t); }
 			del = locale == "date_de" ? "." : "/";
 			return d[0]+del+d[1]+del+d[2];
-		
+
 		case "date_iso":
 			del = s.match(/^\d{2}(\d{2})?([\/.\-])\d{1,2}\2\d{1,2}$/);
 
@@ -365,7 +365,7 @@ String.prototype.toDateTime = function(locale, asObj) {
 			if(!del && /^[0-9]{4}$/.test(s)) {
 				erg = [s.slice(0,2), s.slice(2)];
 			}
-			else if(del && del.length === 2) {			
+			else if(del && del.length === 2) {
 				erg = s.split(del[1]);
 				if(erg.length !== 2){
 					return false;
@@ -374,7 +374,7 @@ String.prototype.toDateTime = function(locale, asObj) {
 			else {
 				return false;
 			}
-			
+
 			if(+erg[0] > 23 || +erg[1] > 59) {
 				return false;
 			}
@@ -385,7 +385,7 @@ String.prototype.toDateTime = function(locale, asObj) {
 			if(!del &&  /^([0-9]{4}|[0-9]{6})$/.test(s)) {
 				erg = [s.slice(0,2), s.slice(2,4), s.slice(4)];
 			}
-			else if(del && del.length === 2) {			
+			else if(del && del.length === 2) {
 				erg = s.split(del[1]);
 				if(erg.length !== 3){ return false; }
 			}
@@ -423,7 +423,7 @@ Date.prototype.format = function(format) {
 		"%z": z,
 		"%Z": z.lpad(2, "0")
 	};
-	return format.replace(/%[dDmMyYwWzZ]{1}/g, function(m) { return c[m]; });	
+	return format.replace(/%[dDmMyYwWzZ]{1}/g, function(m) { return c[m]; });
 };
 
 Date.prototype.getAbsoluteDays = function() {
@@ -628,6 +628,10 @@ if(!this.vxJS) {
 	if(!global.localStorage) {
 		var div = document.createElement("div"), attrKey = "localStorage";
 
+		var sanitizeKey = function(key) {
+			return key.replace( /[^-._0-9a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u37f-\u1fff\u200c-\u200d\u203f\u2040\u2070-\u218f]/gi, "-" );
+		};
+
 		div.style.display = "none";
 		doc.getElementsByTagName("head")[0].appendChild(div); // body not available yet
 
@@ -639,22 +643,26 @@ if(!this.vxJS) {
 			global.localStorage = {
 				setItem: function(key , val) {
 					div.load(attrKey);
-				
+
+					key = sanitizeKey(key);
+
 					if(!div.getAttribute(key)){
 						++this.length;
 					}
+
 					div.setAttribute(key , val);
 					div.save(attrKey);
 				},
 
 				getItem: function(key) {
 					div.load(attrKey);
-					return div.getAttribute(key);
+					return div.getAttribute(sanitizeKey(key));
 				},
 
 				removeItem: function(key) {
 					div.load(attrKey);
-					div.removeAttribute(key);
+					div.removeAttribute(sanitizeKey(key));
+
 					div.save(attrKey);
 					if(this.length) {
 						--this.length;
@@ -671,16 +679,16 @@ if(!this.vxJS) {
 					this.length = 0;
 				},
 
-				key: function(key){
+				key: function(key) {
 					div.load(attrKey);
 					return div.XMLDocument.documentElement.attributes[key];
 				},
 
 				length: div.XMLDocument.documentElement.attributes.length
 			};
-		} 
+		}
 	}
-	
+
 	/**
 	 * wrapper functionality for both DOM elements and widgets,
 	 * allowing fx, drag and drop, etc.
@@ -726,7 +734,7 @@ if(!this.vxJS) {
 			registry: registry
 		};
 	}();
-	
+
 	vxJS.E = function() {};
 
 	vxJS.E.prototype = {
@@ -749,7 +757,7 @@ if(!this.vxJS) {
 			vxJS.event.removeListener(this, f);
 			return this;
 		},
-		
+
 		/**
 		 * add effect element
 		 * @param {String} effect name
@@ -776,12 +784,12 @@ if(!this.vxJS) {
 		 * effects freeze in current state
 		 */
 		clearFxQueue: function() {
-			this.fxQueue = []; 
+			this.fxQueue = [];
 			return this;
 		},
 
 		/**
-		 * retrieve active entry in fx queue 
+		 * retrieve active entry in fx queue
 		 */
 		getActiveFx: function() {
 			if(this.fxQueue && this.fxQueue.length) {
@@ -885,7 +893,7 @@ if(!this.vxJS) {
 
 			/**
 			 * add mousewheel listener - gets special treatment
-			 * 
+			 *
 			 * @param {Object} DOM object to which event gets attached
 			 * @param {Function} callback
 			 */
@@ -967,7 +975,7 @@ if(!this.vxJS) {
 						for(i = registry.length; i--;) {
 							r = registry[i];
 							if(r.elem === id) {
-								if(typeof r == "string" && r.type == f || r.type.indexOf(f) != -1) { break; } 
+								if(typeof r == "string" && r.type == f || r.type.indexOf(f) != -1) { break; }
 							}
 						}
 					}
@@ -1069,7 +1077,7 @@ if(!this.vxJS) {
 				}
 				e.cancelBubble = true;
 			},
-			
+
 			preventDefault: function(e) {
 				if(isHostMethod(e, "preventDefault")) {
 					e.preventDefault();
@@ -1163,7 +1171,7 @@ if(!this.vxJS) {
 
 		getStyle: function(elem, styleProp) {
 			if(global.getComputedStyle) {
-				return global.getComputedStyle( elem, "")[styleProp]; 
+				return global.getComputedStyle( elem, "")[styleProp];
 			}
 			if(elem.currentStyle) {
 				return elem.currentStyle[styleProp];
@@ -1191,7 +1199,7 @@ if(!this.vxJS) {
 
 		appendChildren: function(elem, c) {
 			var i;
-		
+
 			if (Rex.isNumberOrString.test(typeof c)) {
 				elem.appendChild(document.createTextNode(c));
 			}
@@ -1201,7 +1209,7 @@ if(!this.vxJS) {
 						if (Rex.isNumberOrString.test(typeof c[i])) {
 							elem.appendChild(document.createTextNode(c[i]));
 						}
-						else if(c[i]) { 
+						else if(c[i]) {
 							elem.appendChild(c[i]);
 						}
 					}
@@ -1249,7 +1257,7 @@ if(!this.vxJS) {
 		/**
 		 * @param {String} class name
 		 * @param {Object} parent node (optional)
-		 * @param {String} nodeName, restricts selection to this node name (optional) 
+		 * @param {String} nodeName, restricts selection to this node name (optional)
 		 */
 		getElementsByClassName: function() {
 			var regExpCache = {};
@@ -1421,7 +1429,7 @@ if(!this.vxJS) {
 			p.removeChild(n1);
 			p.insertBefore(n1, n2);
 		},
-	
+
 		moveAfter: function(n1, n2) {
 			var p = n1.parentNode;
 			p.removeChild(n1);
@@ -1430,7 +1438,7 @@ if(!this.vxJS) {
 
 		concatText: function(n) {
 			var t = "", i, j, c = n.childNodes;
-			
+
 			for (i = 0; i < c.length; i++){
 				switch (c[i].nodeType){
 					case 1:
@@ -1452,7 +1460,7 @@ if(!this.vxJS) {
 						}
 						else {
 							t += this.concatText(c[i]);
-						}	
+						}
 						break;
 					case 3:
 						t += c[i].nodeValue;
@@ -1538,7 +1546,7 @@ if(!this.vxJS) {
 						var storeBorder, res = { compatMode: doc.compatMode },
 							clH = html.clientHeight, bodyClH = body.clientHeight,
 							div = doc.createElement("div");
-		
+
 						div.style.height = "100px";
 						body.appendChild(div);
 						res.body = !clH || clH != html.clientHeight;
@@ -1564,19 +1572,19 @@ if(!this.vxJS) {
 				else if (html && typeof html.clientWidth === "number") {
 					f = function() {
 						var root = getRoot(), clH, clW;
-	
+
 						if(scrollChecks) {
 							root = scrollChecks.body ? body : html;
 						}
-	
+
 						clH = root.clientHeight;
 						clW = root.clientWidth;
-	
+
 						if (scrollChecks && scrollChecks.body && scrollChecks.includeBordersInBody) {
 							clH += body.clientTop * 2;
 							clW += body.clientLeft * 2;
 						}
-						
+
 						return new Coord(clW, clH);
 					};
 				}
@@ -1590,7 +1598,7 @@ if(!this.vxJS) {
 				}
 			};
 		}(),
-		
+
 		getDocumentScroll: (function() {
 			return function() {
 				if(typeof global.pageXOffset == "number") {
@@ -1626,7 +1634,7 @@ if(!this.vxJS) {
 
 		set: function(elem, s, len) {
 			var r;
-			
+
 			s = s || 0;
 
 			if(typeof len === "undefined") {
@@ -1664,7 +1672,7 @@ if(!this.vxJS) {
 				}
 			}
 		},
-		
+
 		getCaretPosition: function(elem) {
 			var s, r, t, c;
 
