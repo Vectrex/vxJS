@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.3.6 2013-08-29
+ * @version 0.3.7 2013-09-20
  * @author Gregor Kofler, info@gregorkofler.at
  *
  * @param {Object} form element
@@ -25,7 +25,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
-		submittingElement, ifrm, submittedByApp, submittingNow,
+		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
 		xhr = vxJS.xhr(xhrReq), lastXhrResponse, xhrImgSize,
 		xhrImg = function() {
 			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
@@ -392,6 +392,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 			xhr.use(null, { elements: v }, { node: xhrImg });
 			xhr.submit();
+
+			submittedValues = v;
 		}
 	};
 
@@ -437,8 +439,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		v = getValues(form.elements, this);
 		vxJS.merge(v, payload);
 
-		xhr.use(null, { elements: getValues(form.elements, this) }, { node: null } );
+		xhr.use(null, { elements: v }, { node: null } );
 		xhr.submit();
+
+		submittedValues = v;
 	};
 
 	that.disableImmediateSubmit = function() {
@@ -483,6 +487,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 	that.enableIframeUpload = function() {
 		prepareIfu();
+	};
+
+	that.getSubmittedValues = function() {
+		return submittedValues;
 	};
 
 	that.getLastXhrResponse = function() {
