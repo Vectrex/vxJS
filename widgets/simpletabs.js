@@ -1,11 +1,11 @@
 /**
- * automatically structure content with a tab panel 
+ * automatically structure content with a tab panel
  * searches for .vxJS_tabThis elements
  * .section elements within .vxJS_tabThis form the views
  * the first h2 element of a .section is used as tab label
- * tabs inherit both text content and classNames of their respective h2 elements 
- * 
- * @version 0.2.0 2010-08-18
+ * tabs inherit both text content and classNames of their respective h2 elements
+ *
+ * @version 0.2.2 2013-09-22
  * @author Gregor Kofler
  *
  * @param {Object} optional root elemement searched for tabs, defaults to document
@@ -15,6 +15,8 @@
  *		setHash: {Boolean} when true, tab ids will modify URI hash
  *		spacersTop: {Object} additional DOM element(s) inserted before the ul element
  *		spacersBottom: {Object} additional DOM element(s) inserted after the ul element
+ *
+ * served events: "beforeTabClick", "afterTabClick"
  */
 /*global vxJS*/
 
@@ -34,10 +36,10 @@ vxJS.widget.simpleTabs = function() {
 			t = bar.tabs[i];
 			if(t.tab === to) {
 				l.visibility = false;
-				vxJS.dom.removeClassName(l.tab, "shown"); 
+				vxJS.dom.removeClassName(l.tab, "shown");
 				l.page.style.display = "none";
 
-				vxJS.dom.addClassName(to, "shown"); 
+				vxJS.dom.addClassName(to, "shown");
 				t.visibility = true;
 				t.page.style.display = "";
 				bar.last = t;
@@ -97,11 +99,14 @@ vxJS.widget.simpleTabs = function() {
 		conf = config || {};
 
 		var clickListener = function(e, bar) {
+
 			if(bar.inactive) {
 				vxJS.event.preventDefault(e);
 			}
 			else {
+				vxJS.event.serve(bar, "beforeTabClick");
 				switchTabs(bar, (!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
+				vxJS.event.serve(bar, "afterTabClick");
 			}
 		};
 
@@ -117,7 +122,7 @@ vxJS.widget.simpleTabs = function() {
 						secs[i].style.display = "none";
 						txt = vxJS.dom.concatText(h[0]);
 
-						label = config.shortenLabelsTo ? txt.shortenToLen(config.shortenLabelsTo) : txt;
+						label = conf.shortenLabelsTo ? txt.shortenToLen(conf.shortenLabelsTo) : txt;
 
 						if(label.length !== txt.length) {
 							label += "...";
@@ -128,7 +133,7 @@ vxJS.widget.simpleTabs = function() {
 
 						id = h[0].id;
 
-						a = id ? "a".setProp("href", "#" + id).create(label) : label;
+						a = id ? "a".setProp("href", "#" + id).create(label) : document.createTextNode(label);
 
 						li = "li".setProp("title", txt).create();
 
@@ -171,7 +176,7 @@ vxJS.widget.simpleTabs = function() {
 
 				for(i = 0; i < l; ++i) {
 					t = ctrl.tabs;
-					
+
 					if(t[i] == init) {
 						t[i].page.style.display = "";
 						vxJS.dom.addClassName(t[i].tab, "shown");
