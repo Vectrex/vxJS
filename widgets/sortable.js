@@ -1,16 +1,16 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.8 2012-08-23
+ * @version 0.4.9 2013-09-21
  * @author Gregor Kofler
- * 
+ *
  * @param {Object} table table or tbody (when several tbodies in one table) element
  * @param {Array} columnFormat optional array describing column format, core.js String.toDateTime()
- * 
+ *
  * served events: "beginSort", "finishSort", "dragStart", "dragStop"
- * 
+ *
  * @todo provide optional column to sort upon startup
- * 
+ *
  * @todo manual sort interferes with addRow(), removeRow()
  */
 vxJS.widget.sorTable = function(table, config) {
@@ -25,43 +25,11 @@ vxJS.widget.sorTable = function(table, config) {
 	var	th, tb, rows = [], cols = [], w, activeColumn, origSort = [], that = {},
 		draggedRow, ind = {}, mouseUpId, mouseMoveId, clickListenerId;
 
-	var removeIndicator = function() {
-		if(ind.above) {
-			vxJS.dom.removeClassName(ind.above, "insertAbove");
-			ind.above = null;
-		}
-		else if(ind.below) {
-			vxJS.dom.removeClassName(ind.below, "insertBelow");
-			ind.below = null;
-		}
-	};
-
-	var hiliteColumn = function(col) {
-		var i = rows.length;
-
-		if (col) {
-			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "desc" : "asc"));
-			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
-			while(i--) {
-				vxJS.dom.addClassName(rows[i].cells[col.ndx], "active");
-			}
-		}
-	};
-
-	var loliteColumn = function(col) {
-		var i = rows.length;
-
-		if (col) {
-			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
-			while(i--) {
-				vxJS.dom.removeClassName(rows[i].cells[col.ndx], "active");
-			}
-		}
-	};
+	// drag and drop functionality
 
 	var mouseMoveListener = function(e) {
 		var mPos = vxJS.event.getAbsMousePos(e), y = draggedRow.pos.y, elem = draggedRow.elem, sib, next;
-		
+
 		if(mPos.y < y && (sib = vxJS.dom.prevSameNodeNameSibling(elem)) && mPos.y < (y -= sib.offsetHeight/2)) {
 			while((next = vxJS.dom.prevSameNodeNameSibling(sib))) {
 				if(mPos.y > y - sib.offsetHeight/2 - next.offsetHeight/2) {
@@ -147,6 +115,42 @@ vxJS.widget.sorTable = function(table, config) {
 
 		vxJS.event.serve(that, "dragStart");
 		vxJS.event.preventDefault(e);
+	};
+
+	var removeIndicator = function() {
+		if(ind.above) {
+			vxJS.dom.removeClassName(ind.above, "insertAbove");
+			ind.above = null;
+		}
+		else if(ind.below) {
+			vxJS.dom.removeClassName(ind.below, "insertBelow");
+			ind.below = null;
+		}
+	};
+
+	// core functionality
+
+	var hiliteColumn = function(col) {
+		var i = rows.length;
+
+		if (col) {
+			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "desc" : "asc"));
+			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
+			while(i--) {
+				vxJS.dom.addClassName(rows[i].cells[col.ndx], "active");
+			}
+		}
+	};
+
+	var loliteColumn = function(col) {
+		var i = rows.length;
+
+		if (col) {
+			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
+			while(i--) {
+				vxJS.dom.removeClassName(rows[i].cells[col.ndx], "active");
+			}
+		}
 	};
 
 	var getColumnValues = function(ndx) {
@@ -245,7 +249,7 @@ vxJS.widget.sorTable = function(table, config) {
 			doSort();
 		}
 	};
-	
+
 	that.getActiveColumn = function() {
 		return activeColumn;
 	};
@@ -256,7 +260,7 @@ vxJS.widget.sorTable = function(table, config) {
 
 	that.getCurrentOrder = function() {
 		var i, l = rows.length, order = [];
-		
+
 		for(i = 0; i < l; ++i) {
 			order.push(origSort.indexOf(tb.rows[i]));
 		}
@@ -322,7 +326,7 @@ vxJS.widget.sorTable = function(table, config) {
 
 	that.enableSort = function() {
 		if(!clickListenerId) {
-			clickListenerId = vxJS.event.addListener(th, "click", sortOnClick);
+			clickListenerId = vxJS.event.addListener(th.rows[th.rows.length - 1], "click", sortOnClick);
 			vxJS.dom.removeClassName(th, "disabled");
 		}
 	};
@@ -346,18 +350,33 @@ vxJS.widget.sorTable = function(table, config) {
 		}
 		else if (table.nodeName.toUpperCase() === "TABLE") {
 			tb = table.tBodies[0];
-		}	
+		}
 		else {
 			throw new Error("vxJS.widget.sorTable: No valid table or tbody element.");
 		}
 
-		if(!(th = table.getElementsByTagName("thead")[0])) {
+		th = table.getElementsByTagName("thead")[0];
+
+		if(!th && !tb) {
+			throw new Error("vxJS.widget.sorTable: neither tbody nor thead element found.");
+		}
+
+		// create missing thead
+
+		if(!th) {
 			th = "thead".create();
 			tb.parentNode.insertBefore(th, tb);
 			th.appendChild(tb.rows[0]);
 		}
 
-		w = th.rows[0].cells.length;
+		// create missing tbody
+
+		if(!tb) {
+			tb = "tbody".create();
+			th.parentNode.appendChild(tb);
+		}
+
+		w = th.rows[th.rows.length - 1].cells.length;
 
 		rows = vxJS.collectionToArray(tb.rows);
 
@@ -366,7 +385,7 @@ vxJS.widget.sorTable = function(table, config) {
 		}
 
 		for (i = 0; i < w; ++i) {
-			cols.push({ ndx: i, elem: th.rows[0].cells[i], format: columnFormat[i], asc: true });
+			cols.push({ ndx: i, elem: th.rows[th.rows.length - 1].cells[i], format: columnFormat[i], asc: true });
 		}
 
 		that.initOrder();
