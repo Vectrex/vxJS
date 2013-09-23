@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.9 2013-09-21
+ * @version 0.4.10 2013-09-23
  * @author Gregor Kofler
  *
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -283,6 +283,16 @@ vxJS.widget.sorTable = function(table, config) {
 		origSort.splice(origSort.indexOf(tr), 1);
 		rows.splice(rows.indexOf(tr), 1);
 		tb.removeChild(tr);
+	};
+
+	that.removeAllRows = function() {
+		var lc;
+
+		origSort = [];
+		rows = [];
+		while(lc = tb.lastChild) {
+			tb.removeChild(lc);
+		}
 	};
 
 	that.updateRow = function(row, data) {
