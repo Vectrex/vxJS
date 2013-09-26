@@ -1,16 +1,16 @@
 /**
  * provides xmlHttpRequest object
- * 
+ *
  * @param {Object} request, { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
  * @param {Object} param, object containing all additional parameters needed by request
  * @param {Object} animation, object containing a node reference
  * @param {Object} container with callback functions { completed: {Function}, timeout: {Function} }
- * 
+ *
  * @returns xhr object
- * 
- * @version 3.8.3 2012-11-09
+ *
+ * @version 3.8.4 2013-09-26
  * @author Gregor Kofler
- * 
+ *
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
 
@@ -53,7 +53,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 	var abort = function() {
 		stopTimer();
-		if(xhrO) { 
+		if(xhrO) {
 			xhrO.onreadystatechange = function() {};
 			if(xhrO.readyState !== 0 && xhrO.readyState !== 4) {
 				xhrO.abort();
@@ -90,7 +90,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 				else {
 					that.response = JSON.parse(xhrO.responseText || "{}");
 				}
-	
+
 				vxJS.event.serve(that, "complete");
 				if(cb && typeof cb.complete === "function") {
 					cb.complete.call(that);
@@ -113,7 +113,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		param.httpRequest = req.command || "";
 		param.echo = req.echo ? 1 : 0;
-	
+
 		if(req.forceXMLResponse && xhrO.overrideMimeType) {
 			xhrO.overrideMimeType("text/xml");
 		}
@@ -121,7 +121,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 		if(req.method && req.method.toUpperCase() == "GET") {
 			xhrO.open( "GET", uri += (uri.indexOf("?") !== -1 ? "&" : "?") + (new Date()).getTime() + "&xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)), true);
 			xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-			xhrO.onreadystatechange = stateChange;	
+			xhrO.onreadystatechange = stateChange;
 			vxJS.event.serve(that, "beforeSend");
 			xhrO.send(null);
 		}
@@ -129,7 +129,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 			xhrO.open("POST",uri, true);
 			xhrO.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 			xhrO.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			xhrO.onreadystatechange = stateChange;	
+			xhrO.onreadystatechange = stateChange;
 			vxJS.event.serve(that, "beforeSend");
 			xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
 		}
@@ -149,6 +149,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 		else {
 			cb = c;
 		}
+		return this;
 	};
 
 	return that;
