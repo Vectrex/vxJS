@@ -1,9 +1,9 @@
 /**
  * simple image zoom
- * 
- * @version 0.2.2 2011-05-13
+ *
+ * @version 0.2.3 2013-09-26
  * @author Gregor Kofler
- * 
+ *
  * @param {Object} configuration (all parameters are optional)
  *	tTime:				{Number} transition time for opening/closing stage; times between image changes are compensated
  *	stagePosElem:		{Object} DOM element used for "marking" the final stage position
@@ -11,10 +11,13 @@
  *	stageClass:			{String} className of DIV element forming the stage
  *
  * @return {Object} imageZoom object
- * 
+ *
  * served events: "openStart", "openStop", "changeStart", "changeStop", "closeStart", "closeStop", "hideStart", "hideStop"
  */
 vxJS.widget.imageZoom = function(config) {
+
+	"use strict";
+
 	if(!config) {
 		config = {};
 	}
@@ -36,7 +39,7 @@ vxJS.widget.imageZoom = function(config) {
 		return d;
 	}());
 
-	
+
 	var zoomIn = function() {
 		var fxCount = 0,
 			vps = vxJS.dom.getViewportSize(), sSize, sPos,
@@ -55,14 +58,14 @@ vxJS.widget.imageZoom = function(config) {
 		vxJS.event.serve(that, "openStart");
 		zoomActive = true;
 
-		stage.replaceChild(shown.img, stage.firstChild); 
+		stage.replaceChild(shown.img, stage.firstChild);
 		vxJS.dom.setElementSize(shown.img, sSize);
 		vxJS.dom.setElementPosition(stage, sPos);
 		vxJS.dom.setOpacity(stage, 0);
 		vxJS.dom.removeClassName(stage, "fullyZoomed");
 		stage.style.display = "";
 
-		(function() {
+		(function doZoom() {
 			fxCount += delay/1000/tTime;
 
 			if(fxCount >= 1) {
@@ -77,7 +80,7 @@ vxJS.widget.imageZoom = function(config) {
 			vxJS.dom.setElementSize(shown.img, new Coord(sSize.x + (shown.size.x - sSize.x) * fxCount, sSize.y + (shown.size.y - sSize.y) * fxCount));
 			vxJS.dom.setElementPosition(stage, new Coord(sPos.x + (ePos.x - sPos.x) * fxCount, sPos.y + (ePos.y - sPos.y) * fxCount));
 			vxJS.dom.setOpacity(stage, fxCount);
-			window.setTimeout(arguments.callee, delay);
+			window.setTimeout(doZoom, delay);
 		}());
 	};
 
@@ -102,11 +105,11 @@ vxJS.widget.imageZoom = function(config) {
 		padding = vxJS.dom.getElementSize(stage);
 		stage.insertBefore(this.img, stage.firstChild);
 		vxJS.dom.setElementSize(this.img, sSize);
-		sPos = vxJS.dom.getElementOffset(stage, null).add(new Coord(padding.x/2, padding.y/2)); 
+		sPos = vxJS.dom.getElementOffset(stage, null).add(new Coord(padding.x/2, padding.y/2));
 		compTime = Math.max(0.2, Math.abs((this.size.len() - sSize.len())) / this.size.len() * tTime);
-		(function() {
+		(function doZoom() {
 			fxCount += delay/1000/compTime;
-		
+
 			if(fxCount >= 1) {
 				vxJS.dom.setElementSize(shown.img, shown.size);
 				vxJS.dom.setElementPosition(stage, ePos);
@@ -117,7 +120,7 @@ vxJS.widget.imageZoom = function(config) {
 			}
 			vxJS.dom.setElementSize(shown.img, new Coord(sSize.x + (shown.size.x - sSize.x) * fxCount, sSize.y + (shown.size.y - sSize.y) * fxCount));
 			vxJS.dom.setElementPosition(stage, new Coord(sPos.x + (ePos.x - sPos.x) * fxCount, sPos.y + (ePos.y - sPos.y) * fxCount));
-			window.setTimeout(arguments.callee, delay);
+			window.setTimeout(doZoom, delay);
 		}());
 	};
 
@@ -131,7 +134,7 @@ vxJS.widget.imageZoom = function(config) {
 		vxJS.event.serve(that, hide ? "hideStart" : "closeStart");
 		vxJS.dom.removeClassName(stage, "fullyZoomed");
 
-		(function() {
+		(function doZoom() {
 			fxCount -= delay/1000/tTime;
 
 			if(fxCount <= 0) {
@@ -142,10 +145,10 @@ vxJS.widget.imageZoom = function(config) {
 				return;
 			}
 			vxJS.dom.setOpacity(stage, fxCount);
-			window.setTimeout(arguments.callee, delay);
+			window.setTimeout(doZoom, delay);
 		}());
 	};
-	
+
 	var setLoaded = function() {
 		this.size	= new Coord(this.img.width, this.img.height);
 		this.loaded = true;
@@ -178,7 +181,7 @@ vxJS.widget.imageZoom = function(config) {
 	};
 
 	var preloadImage = function(item) {
-		return function() { preparePreload(item); }; 
+		return function() { preparePreload(item); };
 	};
 
 	var doZoom = function(item) {
@@ -218,7 +221,7 @@ vxJS.widget.imageZoom = function(config) {
 		vxJS.event.addListener(a, "click", zoom(item));
 	});
 	vxJS.event.addListener(stage, "click", zoomOut);
-	
+
 	that.getImages = function() { return images; };
 	that.getShown = function() { return shown; };
 	that.zoom = function(ndx) { doZoom(images[ndx]); };

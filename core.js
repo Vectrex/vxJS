@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.1.1 2013-09-16
+ * @version 2.1.1 2013-09-25
  *
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -628,10 +628,6 @@ if(!this.vxJS) {
 	if(!global.localStorage) {
 		var div = document.createElement("div"), attrKey = "localStorage";
 
-		var sanitizeKey = function(key) {
-			return key.replace( /[^-._0-9a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u37f-\u1fff\u200c-\u200d\u203f\u2040\u2070-\u218f]/gi, "-" );
-		};
-
 		div.style.display = "none";
 		doc.getElementsByTagName("head")[0].appendChild(div); // body not available yet
 
@@ -644,25 +640,21 @@ if(!this.vxJS) {
 				setItem: function(key , val) {
 					div.load(attrKey);
 
-					key = sanitizeKey(key);
-
 					if(!div.getAttribute(key)){
 						++this.length;
 					}
-
 					div.setAttribute(key , val);
 					div.save(attrKey);
 				},
 
 				getItem: function(key) {
 					div.load(attrKey);
-					return div.getAttribute(sanitizeKey(key));
+					return div.getAttribute(key);
 				},
 
 				removeItem: function(key) {
 					div.load(attrKey);
-					div.removeAttribute(sanitizeKey(key));
-
+					div.removeAttribute(key);
 					div.save(attrKey);
 					if(this.length) {
 						--this.length;
@@ -679,7 +671,7 @@ if(!this.vxJS) {
 					this.length = 0;
 				},
 
-				key: function(key) {
+				key: function(key){
 					div.load(attrKey);
 					return div.XMLDocument.documentElement.attributes[key];
 				},
@@ -1230,7 +1222,7 @@ if(!this.vxJS) {
 		cleanDOM: function() {
 			var r = /\S/;
 
-			return function(n) {
+			return function walkDom(n) {
 				var i;
 
 				if(n.nodeType === 8 || (n.nodeType === 3 && !r.test(n.data))) {
@@ -1239,7 +1231,7 @@ if(!this.vxJS) {
 				}
 				if(n.childNodes) {
 					for(i = n.childNodes.length; i--;) {
-						arguments.callee(n.childNodes[i]);
+						walkDom(n.childNodes[i]);
 					}
 				}
 			};
@@ -1314,7 +1306,7 @@ if(!this.vxJS) {
 
 		getParentElement: function(elem, tag) {
 			var t, m, r;
-			if(!tag) { return elem.parentNode || null; }
+			if(!tag) { return elem.parentNode; }
 
 			if (/^[a-z0-9]+$/i.test(tag)) {
 				t = tag.toUpperCase();

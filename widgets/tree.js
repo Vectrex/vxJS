@@ -1,7 +1,7 @@
 /**
  * Tree
- * 
- * @version 0.6.0, 2012-11-17
+ *
+ * @version 0.6.1, 2012-09-26
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -22,12 +22,14 @@
  *	afterCheckBoxClick
  *	expandTree
  *	collapseTree
- * 
+ *
  * @todo handling of "disabled" property
  * @todo alternatively add "hashes" to speed up tree traversal
  */
 
 vxJS.widget.tree = function(config) {
+
+	"use strict";
 
 	if(!config) { config = {}; }
 
@@ -186,7 +188,7 @@ vxJS.widget.tree = function(config) {
 
 		expandToLevel: function(lvl) {
 			var i = this.branches.length, t;
-			
+
 			if(!lvl) {
 				lvl = 0;
 			}
@@ -244,7 +246,7 @@ vxJS.widget.tree = function(config) {
 
 		this.element = document.createElement("li");
 		this.tree = tree;
-		
+
 		for(p in data) {
 			if(p == "branches" && data.branches.length) {
 				hasSubtree = true;
@@ -356,7 +358,7 @@ vxJS.widget.tree = function(config) {
 			if(!this.cbElem) {
 				this.cbElem = document.createElement("span");
 			}
-			this.cbElem.className = ["unChecked", "checked", "partChecked"][+this.cbState] + " __check__" + (this.disabled ? " disabled" : ""); 
+			this.cbElem.className = ["unChecked", "checked", "partChecked"][+this.cbState] + " __check__" + (this.disabled ? " disabled" : "");
 		},
 
 		renderNode: function() {
@@ -408,7 +410,7 @@ vxJS.widget.tree = function(config) {
 					this.renderCheckBox();
 					li.appendChild(this.cbElem);
 				}
-	
+
 				this.labelElem = document.createElement("div");
 				this.labelElem.className = "__label__";
 				this.labelElem.appendChild(vxJS.dom.parse(this.elements));
@@ -444,7 +446,7 @@ vxJS.widget.tree = function(config) {
 
 				while((c = li.childNodes[0])) {
 					if(c.nodeType == 1 && c.nodeName.toLowerCase() == "ul") {
-						b.branches = arguments.callee(c);
+						b.branches = importUl(c);
 						c.parentNode.removeChild(c);
 					}
 					else {
@@ -527,7 +529,7 @@ vxJS.widget.tree = function(config) {
 				b = t.branches[l];
 
 				if(b.subtree) {
-					arguments.callee(b.subtree);
+					cbRecursion(b.subtree);
 				}
 				if(b.cbElem && b.cbState == 1) {
 					branches.push(b);
@@ -559,7 +561,7 @@ vxJS.widget.tree = function(config) {
 				}
 				if(b[l].subtree) {
 					track.push(b[l]);
-					arguments.callee(b[l].subtree);
+					scan(b[l].subtree);
 				}
 			}
 			track.pop();

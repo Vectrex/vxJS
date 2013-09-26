@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.3.8 2013-09-25
+ * @version 0.3.9 2013-09-26
  * @author Gregor Kofler, info@gregorkofler.at
  *
  * @param {Object} form element
@@ -18,6 +18,8 @@
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq) {
+
+	"use strict";
 
 	if (!form.nodeName || form.nodeName.toLowerCase() != "form") {
 		throw new Error("widget.xhrForm: no form element specified!");
@@ -302,7 +304,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			}
 		};
 
-		(function() {
+		(function apcPolling() {
 			if(!xhr) {
 				xhr = vxJS.xhr({ command: "apcPoll" }, { id: apcHidden.value });
 				vxJS.event.addListener(xhr, "complete", parseApc);
@@ -310,7 +312,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			else {
 				xhr.use();
 			}
-			apcPollTimeout = window.setTimeout(arguments.callee, 1000);
+			apcPollTimeout = window.setTimeout(apcPolling, 1000);
 		})();
 	};
 
