@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.4 2013-03-11
+ * @version 2.2.5 2013-09-26
  * @author Gregor Kofler
  *
  * @param {Object} (optional) formElem element receiving data value
@@ -189,8 +189,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		table.replaceChild("tbody".create(docFrag), table.childNodes[1]);
 
 		if(xhr) {
-			xhr.use(xhrReq, { date: sheetDate.getFullYear() + "-" + ("0" + (sheetDate.getMonth() + 1)).slice(-2) + "-01" });
-			xhr.submit();
+			xhr.use(xhrReq, { date: sheetDate.getFullYear() + "-" + ("0" + (sheetDate.getMonth() + 1)).slice(-2) + "-01" }).submit();
 			xhrActive = true;
 			vxJS.dom.addClassName(table, "xhrActive");
 		}
