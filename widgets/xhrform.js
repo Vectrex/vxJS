@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.3.9 2013-09-26
+ * @version 0.4.0 2013-09-27
  * @author Gregor Kofler, info@gregorkofler.at
  *
  * @param {Object} form element
@@ -304,7 +304,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			}
 		};
 
-		(function apcPolling() {
+		(function() {
 			if(!xhr) {
 				xhr = vxJS.xhr({ command: "apcPoll" }, { id: apcHidden.value });
 				vxJS.event.addListener(xhr, "complete", parseApc);
@@ -312,7 +312,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			else {
 				xhr.use();
 			}
-			apcPollTimeout = window.setTimeout(apcPolling, 1000);
+			apcPollTimeout = window.setTimeout(arguments.callee, 1000);
 		})();
 	};
 
@@ -415,7 +415,11 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	that.clearErrors = function() {
-		setErrors([]);
+		clearErrors();
+	};
+
+	that.getErrors = function() {
+		return prevErr;
 	};
 
 	that.clearFileInputs = function() {
@@ -502,7 +506,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	that.clearPayload = function() {
-		delete payload;
+		payload = null;
 	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
