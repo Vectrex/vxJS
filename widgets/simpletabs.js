@@ -5,7 +5,7 @@
  * the first h2 element of a .section is used as tab label
  * tabs inherit both text content and classNames of their respective h2 elements
  *
- * @version 0.2.2 2013-09-22
+ * @version 0.2.4 2013-10-07
  * @author Gregor Kofler
  *
  * @param {Object} optional root elemement searched for tabs, defaults to document
@@ -21,20 +21,23 @@
 /*global vxJS*/
 
 vxJS.widget.simpleTabs = function() {
+
 	var conf;
 
 	var switchTabs = function(bar, to) {
+
 		var l = bar.last, i, t;
 
 		if(!to || l.tab == to) { return; }
 
-		if(to.id && conf.setHash) {
-			window.location = "#" + to.id;
-		}
-
 		for(i = bar.tabs.length; i--;) {
 			t = bar.tabs[i];
 			if(t.tab === to) {
+
+				if(t.id && conf.setHash) {
+					window.location = "#" + t.id;
+				}
+
 				l.visibility = false;
 				vxJS.dom.removeClassName(l.tab, "shown");
 				l.page.style.display = "none";
@@ -100,14 +103,13 @@ vxJS.widget.simpleTabs = function() {
 
 		var clickListener = function(e, bar) {
 
-			if(bar.inactive) {
-				vxJS.event.preventDefault(e);
-			}
-			else {
+			if(!bar.inactive) {
 				vxJS.event.serve(bar, "beforeTabClick");
 				switchTabs(bar, (!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
 				vxJS.event.serve(bar, "afterTabClick");
 			}
+
+			vxJS.event.preventDefault(e);
 		};
 
 		for( ;i--; ) {
