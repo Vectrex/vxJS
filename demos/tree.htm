@@ -16,11 +16,14 @@
 	<body>
 		<script>
 			vxJS.event.addDomReadyListener(function() {
+
 				"use strict";
 
 				var tree = vxJS.widget.tree({
 					branches: [
-						{	elements: [ { text: "Division 1"} ],
+						{
+							elements: [ { text: "Division 1"} ],
+							hasCheckBox: false,
 							branches: [
 								{ elements: [{ text: "Mrs. Van De Kamp"}], key: 1, cbState: 1 },
 								{ elements: [{ text: "Mrs. Mayer"}], key: 2 },
@@ -33,7 +36,9 @@
 								}
 							]
 						},
-						{ elements: [ { text: "Division 2"} ],
+						{
+							elements: [ { text: "Division 2"} ],
+							hasCheckBox: false,
 							branches: [
 								{ elements: [ { text: "Subdivision 2.1"} ],
 									branches: [
@@ -49,9 +54,12 @@
 								}
 							]
 						},
-						{ elements: [ { text: "Division 3"} ],
+						{
+							elements: [ { text: "Division 3"} ],
+							hasCheckBox: false,
 							branches: [
-								{ elements: [ { text: "Subdivision 3.1"} ],
+								{
+									elements: [ { text: "Subdivision 3.1"} ],
 									branches: [
 										{ elements: [{ text: "Mrs. Britt"}], key: 9 },
 										{ elements: [{ text: 'Office 3.1.1'}],
@@ -65,17 +73,20 @@
 								}
 							]
 						},
-						{ elements: [ { text: "Division 4"} ] }
+						{
+							elements: [ { text: "Division 4"} ],
+							hasCheckBox: false
+						}
 					],
-					leafNodeDefault: true,
-					checkBoxes: true,
-					checkBoxIndependence: true,
-					container: document.getElementById("treeContainer")
+					leafNodeDefault:		true,
+					checkBoxes:				true,
+					checkBoxIndependence:	true,
+					container:				document.getElementById("treeContainer")
 				});
 			});
 		</script>
 
-
+		<p>Example: Independent checkboxes, top level without checkboxes.</p>
 		<div id="treeContainer">
 
 		</div>
