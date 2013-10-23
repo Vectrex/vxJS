@@ -1,0 +1,21 @@
+.vxJS_tree		         	{ list-style-type: none; margin: 0; padding: 0; font-size: 100%; }
+.vxJS_tree li            	{ padding: 0; margin: 0 0 0 32px; background: url(assets/tree_guide.gif) repeat-y 0% 0%; }
+.vxJS_tree li.lastBranch 	{ background-image: none; }
+
+.vxJS_tree li img,
+.vxJS_tree li span 			{ vertical-align: middle; }
+
+.vxJS_tree .leafNode,
+.vxJS_tree .subTreeExpanded,
+.vxJS_tree .subTreeCollapsed,
+.vxJS_tree .checked,
+.vxJS_tree .unChecked,
+.vxJS_tree .partChecked      { display: inline-block; width: 24px; height: 24px; background: url(assets/tree_plus.gif) no-repeat 50% 50%; }
+.vxJS_tree .leafNode         { background-image: url(assets/leaf_node.gif); }
+.vxJS_tree .subTreeExpanded  { background-image: url(assets/tree_minus.gif); }
+.vxJS_tree .checked          { background-image: url(assets/checked.gif); }
+.vxJS_tree .unChecked        { background-image: url(assets/un_checked.gif); }
+.vxJS_tree .partChecked      { background-image: url(assets/part_checked.gif); }
+
+.vxJS_tree div.__label__     { display: inline; }
+.vxJS_tree .disabled		 { opacity: 0.5; }

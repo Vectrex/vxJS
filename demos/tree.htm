@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>vxJS tree widget</title>
+
+		<meta http-equiv='content-type' content='text/html; charset=UTF-8'>
+
+		<link type='text/css' rel='stylesheet' href='style.css'>
+
+		<script type="text/javascript" src="../core.js"></script>
+		<script type="text/javascript" src="../widgets/tree.js"></script>
+	</head>
+
+	<body>
+		<script>
+			vxJS.event.addDomReadyListener(function() {
+				"use strict";
+
+				var tree = vxJS.widget.tree({
+					branches: [
+						{	elements: [ { text: "Division 1"} ],
+							branches: [
+								{ elements: [{ text: "Mrs. Van De Kamp"}], key: 1, cbState: 1 },
+								{ elements: [{ text: "Mrs. Mayer"}], key: 2 },
+								{ elements: [ { text: "Subdivision 1.1"} ],
+									cbState: 1,
+									branches: [
+										{ elements: [{ text: "Mrs. Scavo"}], key: 3, cbState: 1 },
+										{ elements: [{ text: "Mrs. Solis"}], key: 4 }
+									]
+								}
+							]
+						},
+						{ elements: [ { text: "Division 2"} ],
+							branches: [
+								{ elements: [ { text: "Subdivision 2.1"} ],
+									branches: [
+										{ elements: [{ text: "Mr. Scavo"}], key: 5, cbState: 1 },
+										{ elements: [{ text: "Mr. Hodge"}], key: 6 }
+									]
+								},
+								{ elements: [ { text: "Subdivision 2.1"} ],
+									branches: [
+										{ elements: [{ text: "Mr. Delfino"}], key: 7 },
+										{ elements: [{ text: "Mr. Solis"}], key: 8 }
+									]
+								}
+							]
+						},
+						{ elements: [ { text: "Division 3"} ],
+							branches: [
+								{ elements: [ { text: "Subdivision 3.1"} ],
+									branches: [
+										{ elements: [{ text: "Mrs. Britt"}], key: 9 },
+										{ elements: [{ text: 'Office 3.1.1'}],
+											cbState: 1,
+											branches: [
+												{ elements: [{ text: "Mr. Young"}], key: 10 },
+												{ elements: [{ text: "Mrs. McCluskey"}], key: 11 }
+											]
+										}
+									]
+								}
+							]
+						},
+						{ elements: [ { text: "Division 4"} ] }
+					],
+					leafNodeDefault: true,
+					checkBoxes: true,
+					checkBoxIndependence: true,
+					container: document.getElementById("treeContainer")
+				});
+			});
+		</script>
+
+
+		<div id="treeContainer">
+
+		</div>
+	</body>
+
+</html>
