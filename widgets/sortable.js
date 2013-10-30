@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.10 2013-09-23
+ * @version 0.4.11 2013-10-27
  * @author Gregor Kofler
  *
  * @param {Object} table table or tbody (when several tbodies in one table) element
@@ -195,6 +195,7 @@ vxJS.widget.sorTable = function(table, config) {
 	};
 
 	var doSort = function() {
+
 		var cbSort = function() {
 			var s = this.asc ? 1 : -1;
 
@@ -215,15 +216,19 @@ vxJS.widget.sorTable = function(table, config) {
 			};
 		};
 
-		vxJS.event.serve(that, "beginSort");
+		if(activeColumn) {
 
-		buildTable(
-			getColumnValues(activeColumn.ndx).
-				sort(typeof activeColumn.format == "function" ? activeColumn.format.bind(activeColumn) : cbSort.bind(activeColumn)()
-			)
-		);
+			vxJS.event.serve(that, "beginSort");
 
-		vxJS.event.serve(that, "finishSort");
+			buildTable(
+				getColumnValues(activeColumn.ndx).
+					sort(typeof activeColumn.format == "function" ? activeColumn.format.bind(activeColumn) : cbSort.bind(activeColumn)()
+				)
+			);
+
+			vxJS.event.serve(that, "finishSort");
+
+		}
 	};
 
 	var sortOnClick = function() {
