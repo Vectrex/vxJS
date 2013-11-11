@@ -1,7 +1,7 @@
 /**
  * scrollable widget
- * 
- * @version 0.1.6 2010-12-28
+ *
+ * @version 0.1.7 2013-11-06
  * @author Gregor Kofler
  *
  * @param {Object} parent DOM element; childNodes are searched for elements with className "scrollableItem"; defaults to document
@@ -11,7 +11,7 @@
  *	transition:	{String} scrolling transition, defaults to "decel"
  *
  * @return {Object} scrollable object
- * 
+ *
  * served events: none
  */
 vxJS.widget.scrollable = function(parent, config) {
@@ -31,13 +31,17 @@ vxJS.widget.scrollable = function(parent, config) {
 	}();
 
 	var mask = function() {
-		var d = "div".setProp("class", "mask").create(wrap.element), s = d.style; 
+		var d = "div".setProp("class", "mask").create(wrap.element), s = d.style;
 		s.position = "relative";
 		s.overflow = "hidden";
 		return d;
 	}();
 
-	vxJS.dom.getElementsByClassName("scrollableItem", parent || document).forEach( function(e) { items.push( { element: e, size: vxJS.dom.getElementSize(e) } ); });
+	vxJS.dom.getElementsByClassName("scrollableItem", parent || document).forEach( function(e) {
+		var size = vxJS.dom.getElementSize(e);
+		e.style[dir === "x" ? "width" : "height"] = size[dir] + "px";
+		items.push( { element: e, size: size } );
+	});
 
 	if(!items.length) {
 		return;
@@ -52,6 +56,7 @@ vxJS.widget.scrollable = function(parent, config) {
 	};
 
 	var move = function(add, fromQueue) {
+
 		if(active && !fromQueue) {
 			moveQueue.push(add);
 			return;
@@ -73,7 +78,7 @@ vxJS.widget.scrollable = function(parent, config) {
 			for(i = ndx; i++ < nextNdx;) {
 				item = items[i];
 				delta[dir] -= item.size[dir];
-	
+
 				offset = vxJS.dom.getElementOffset(item.element, mask);
 				if(offset[dir] < maskSize[dir]) {
 					delta[dir] += maskSize[dir] - offset[dir];
@@ -84,7 +89,7 @@ vxJS.widget.scrollable = function(parent, config) {
 			for(i = ndx; i-- > nextNdx;) {
 				item = items[i];
 				delta[dir] += item.size[dir];
-	
+
 				offset = vxJS.dom.getElementOffset(item.element, mask);
 				if(offset[dir] + item.size[dir] > 0) {
 					delta[dir] -= offset[dir] + item.size[dir];
@@ -131,7 +136,7 @@ vxJS.widget.scrollable = function(parent, config) {
 
 	var handleKeydown = function(e) {
 		var kc = e.keyCode;
-		
+
 		vxJS.event.preventDefault(e);
 
 		if(dir == "x") {
@@ -196,19 +201,19 @@ vxJS.widget.scrollable = function(parent, config) {
 	items.forEach(prepItem);
 
 	return {
-		element: prepContainer(),
-		gotoPrev: gotoPrev,
-		gotoNext: gotoNext,
-		gotoNdx: gotoNdx,
-		gotoElem: function(elem) {
-			var l = items.length;
-			while(l--) {
-				if(items[l].element === elem) {
-					gotoNdx(l);
-					return;
-				}
-			}
-		},
+		element:	prepContainer(),
+		gotoPrev:	gotoPrev,
+		gotoNext:	gotoNext,
+		gotoNdx:	gotoNdx,
+		gotoElem:	function(elem) {
+						var l = items.length;
+						while(l--) {
+							if(items[l].element === elem) {
+								gotoNdx(l);
+								return;
+							}
+						}
+					},
 		getCurrentItem: function() { return items[ndx]; }
 	};
 };
