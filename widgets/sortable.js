@@ -1,11 +1,12 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.11 2013-10-27
+ * @version 0.4.12 2013-11-13
  * @author Gregor Kofler
  *
- * @param {Object} table table or tbody (when several tbodies in one table) element
- * @param {Array} columnFormat optional array describing column format, core.js String.toDateTime()
+ * @param {Object}	HTMLTableElement or tbody element which will have functionality added
+ * @param {Object}	array columnFormat optional describing column format, core.js String.toDateTime()
+ * 					number activeHeaderRowIndex select row, which will listen to click events; defaults to last row in table header
  *
  * served events: "beginSort", "finishSort", "dragStart", "dragStop"
  *
@@ -14,15 +15,15 @@
  * @todo manual sort interferes with addRow(), removeRow()
  */
 vxJS.widget.sorTable = function(table, config) {
+
 	"use strict";
 
 	if(!config) {
 		config = {};
 	}
 
-	var columnFormat = config.columnFormat && config.columnFormat.length ? config.columnFormat : [];
-
-	var	th, tb, rows = [], cols = [], w, activeColumn, origSort = [], that = {},
+	var	columnFormat = config.columnFormat && config.columnFormat.length ? config.columnFormat : [],
+		th, tb, rows = [], cols = [], w, activeColumn, origSort = [], that = {},
 		draggedRow, ind = {}, mouseUpId, mouseMoveId, clickListenerId;
 
 	// drag and drop functionality
@@ -259,8 +260,13 @@ vxJS.widget.sorTable = function(table, config) {
 		return activeColumn;
 	};
 
-	that.initOrder = function() {
-		origSort = [].concat(vxJS.collectionToArray(tb.rows));
+	that.initSort = function() {
+		rows = vxJS.collectionToArray(tb.rows);
+		origSort = [].concat(rows);
+
+		if(activeColumn) {
+			hiliteColumn(activeColumn);
+		}
 	};
 
 	that.getCurrentOrder = function() {
@@ -304,7 +310,7 @@ vxJS.widget.sorTable = function(table, config) {
 		if(!Array.isArray(data)) {
 			return;
 		}
-		if(!row.nodeName || !row.nodeName.toUpperCase() == "TR") {
+		if(!row.nodeName || !row.nodeName.toLowerCase() == "tr") {
 			row = rows[+ndx];
 		}
 		data.forEach(function(d, ndx) {
@@ -341,7 +347,7 @@ vxJS.widget.sorTable = function(table, config) {
 
 	that.enableSort = function() {
 		if(!clickListenerId) {
-			clickListenerId = vxJS.event.addListener(th.rows[th.rows.length - 1], "click", sortOnClick);
+			clickListenerId = vxJS.event.addListener(th.rows[typeof config.activeHeaderRowIndex === "undefined" ? th.rows.length - 1 : config.activeHeaderRowIndex], "click", sortOnClick);
 			vxJS.dom.removeClassName(th, "disabled");
 		}
 	};
@@ -357,13 +363,13 @@ vxJS.widget.sorTable = function(table, config) {
 	that.reSort = doSort;
 
 	(function() {
-		var i;
+		var i, activeRowNdx;
 
-		if (table.nodeName.toUpperCase() === "TBODY") {
+		if (table.nodeName.toLowerCase() === "tbody") {
 			tb = table;
 			table = tb.parentNode;
 		}
-		else if (table.nodeName.toUpperCase() === "TABLE") {
+		else if (table.nodeName.toLowerCase() === "table") {
 			tb = table.tBodies[0];
 		}
 		else {
@@ -391,19 +397,19 @@ vxJS.widget.sorTable = function(table, config) {
 			th.parentNode.appendChild(tb);
 		}
 
-		w = th.rows[th.rows.length - 1].cells.length;
+		activeRowNdx = typeof config.activeHeaderRowIndex === "undefined" ? th.rows.length - 1 : config.activeHeaderRowIndex;
 
-		rows = vxJS.collectionToArray(tb.rows);
+		w = th.rows[activeRowNdx].cells.length;
 
 		if(columnFormat.indexOf("manual") !== -1) {
 			vxJS.event.addListener(tb, "mousedown", startDrag);
 		}
 
 		for (i = 0; i < w; ++i) {
-			cols.push({ ndx: i, elem: th.rows[th.rows.length - 1].cells[i], format: columnFormat[i], asc: true });
+			cols.push( { ndx: i, elem: th.rows[activeRowNdx].cells[i], format: columnFormat[i], asc: true } );
 		}
 
-		that.initOrder();
+		that.initSort();
 		that.enableSort();
 	}());
 
