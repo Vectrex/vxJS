@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.0 2013-09-27
+ * @version 0.4.1 2013-11-15
  * @author Gregor Kofler, info@gregorkofler.at
  *
  * @param {Object} form element
@@ -28,8 +28,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
 		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
-		xhr = vxJS.xhr(xhrReq), lastXhrResponse, xhrImgSize,
-		xhrImg = function() {
+		xhr = vxJS.xhr(xhrReq), lastXhrResponse, throbberSize,
+		throbber = function() {
 			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
 			i.style.position = "absolute";
 			vxJS.dom.setElementPosition(i,  { x: -100, y: -100 } );
@@ -37,20 +37,25 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			return i;
 		}();
 
-	var posXhrImg = function() {
+	var posThrobber = function() {
 		var p, s;
 
 		if(!submittingElement) {
 			return;
 		}
-		if(!xhrImgSize) {
-			xhrImgSize = vxJS.dom.getElementSize(xhrImg);
+		if(!throbberSize) {
+
+			// ensure that the dimensions can be calculated
+
+			throbber.style.display = "block";
+			throbberSize = vxJS.dom.getElementSize(throbber);
+			throbber.style.display = "";
 		}
 		p = vxJS.dom.getElementOffset(submittingElement);
 		s = vxJS.dom.getElementSize(submittingElement);
 		p.x += s.x+4;
-		p.y += (s.y-xhrImgSize.y)/2;
-		vxJS.dom.setElementPosition(xhrImg, p);
+		p.y += (s.y-throbberSize.y)/2;
+		vxJS.dom.setElementPosition(throbber, p);
 	};
 
 	var disableSubmit = function() {
@@ -73,7 +78,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 				hideApcInfo();
 			}
 
-			xhrImg.style.display = "none";
+			vxJS.dom.removeClassName(throbber, "active");
 			enableSubmit();
 
 			vxJS.event.serve(that, "ifuResponse", response);
@@ -339,8 +344,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 					if(apcHidden) {
 						apcPoll();
 					}
-					posXhrImg();
-					xhrImg.style.display = "";
+					posThrobber();
+					vxJS.dom.addClassName(throbber, "active");
 					submittedByApp = true;
 					disableSubmit();
 					form.submit();
@@ -387,12 +392,12 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 			handleXhrResponse( { command: "submit"} );
 		}
 		else {
-			posXhrImg();
+			posThrobber();
 
 			v = getValues(form.elements, this);
 			vxJS.merge(v, payload);
 
-			xhr.use(null, { elements: v }, { node: xhrImg }).submit();
+			xhr.use(null, { elements: v }, { node: throbber }).submit();
 
 			submittedValues = v;
 		}
