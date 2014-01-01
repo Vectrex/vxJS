@@ -1,7 +1,7 @@
 /**
  * Tree
  *
- * @version 0.6.1, 2012-09-26
+ * @version 0.6.2, 2014-01-01
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -493,11 +493,11 @@ vxJS.widget.tree = function(config) {
 		else {
 			c = this;
 			while(c !== b.element) {
-				c = c.parentNode;
 				if(c === b.labelElem) {
 					vxJS.event.serve(that, "labelClick", { branch: b });
 					break;
 				}
+				c = c.parentNode;
 			}
 		}
 	};
