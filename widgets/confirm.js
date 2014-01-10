@@ -1,25 +1,23 @@
 /**
  * simple "confirm" dialog widget
- * 
+ *
  * the widget is implemented as a singleton
- * 
+ *
  * focus events of input, textarea, select and a elements are "captured"
- * 
- * @version 0.1.7 2012-11-15
+ *
+ * @version 0.1.8 2013-12-20
  * @author Gregor Kofler
  *
  * @param {Object} configuration (all properties are optional)
- *	overlay:	{Boolean} display overlay; requires vxJS.widget.shared.overlay() 
+ *	overlay:	{Boolean} display overlay; requires vxJS.widget.shared.overlay()
  *	buttons:	{Array} buttons to display; each entry is an object with a key and label property
  *	content:	{Array} by vxJS.dom.parse() parseable array
  *	timeout:	{Number} seconds after which the dialog is automatically closed
  *	className:	{String} additional className of parent element
  *
  * @return {Object} confirm object
- * 
+ *
  * served events: "showWidget", "hideWidget", "buttonClick", "focusLost"
- * 
- * @todo beautify IE6 position=fixed
  */
 
 vxJS.widget.confirm = function() {
@@ -35,7 +33,7 @@ vxJS.widget.confirm = function() {
 			if(lastFocused) {
 				while(--i) {
 					if(buttons[i].element == lastFocused) {
-						lastFocused = buttons[++i % buttons.length].element; 
+						lastFocused = buttons[++i % buttons.length].element;
 						lastFocused.focus();
 						return;
 					}
@@ -70,7 +68,7 @@ vxJS.widget.confirm = function() {
 			boundListeners.forEach(function(l) { vxJS.event.removeListener(l); });
 		};
 
-		var setOverlay = function() { 
+		var setOverlay = function() {
 			if(c.overlay) {
 				overlay = vxJS.widget.shared.overlay();
 			}
@@ -96,7 +94,7 @@ vxJS.widget.confirm = function() {
 			var clickListener = function() {
 				var l = buttons.length;
 
-				if(this.nodeName.toUpperCase() == "INPUT") {
+				if(this.nodeName.toLowerCase() == "button") {
 					while(--l) {
 						if(buttons[l].element == this) {
 							break;
@@ -121,13 +119,13 @@ vxJS.widget.confirm = function() {
 			buttons.forEach(function(b) {
 				var i;
 				if(b.key && b.label) {
-					i = "input".setProp([["type", "button"], ["class", "button_" + b.key], ["value", b.label]]).create();
+					i = "button".setProp( { type: "button", className: "button_" + b.key } ).create(b.label);
 					bb.appendChild(i);
 					b.element = i;
 					b.listenerId = vxJS.event.addListener(i, "focus", function() { lastFocused = this; });
 				}
 			});
-			
+
 			listenerId = vxJS.event.addListener(bb, "click", clickListener);
 
 			return bb;
@@ -182,7 +180,7 @@ vxJS.widget.confirm = function() {
 				return;
 			}
 			shown = false;
-			
+
 			releaseFocus();
 
 			buttons.forEach(function(b) { vxJS.event.removeListener(b.listenerId); });
