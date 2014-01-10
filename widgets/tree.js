@@ -1,7 +1,7 @@
 /**
  * Tree
  *
- * @version 0.6.2, 2014-01-01
+ * @version 0.6.3, 2014-01-10
  * @author Gregor Kofler
  *
  * @param {Object} config object
@@ -462,7 +462,7 @@ vxJS.widget.tree = function(config) {
 		return branches;
 	};
 
-	var handleClick = function() {
+	var handleClick = function(e) {
 		var c, b;
 
 		// @todo filter or speed up search
@@ -472,29 +472,29 @@ vxJS.widget.tree = function(config) {
 		}
 
 		activeBranch = b;
-		vxJS.event.serve(that, "branchClick", { branch: b});
+		vxJS.event.serve(that, "branchClick", { branch: b, event: e });
 
 		if(b.nodeElem && this === b.nodeElem) {
-			vxJS.event.serve(that, "beforeNodeClick", { branch: b });
+			vxJS.event.serve(that, "beforeNodeClick", { branch: b, event: e });
 			b.toggleSubTree();
-			vxJS.event.serve(that, "afterNodeClick", { branch: b });
+			vxJS.event.serve(that, "afterNodeClick", { branch: b, event: e });
 		}
 
 		else if(b.cbElem && this === b.cbElem) {
-			vxJS.event.serve(that, "beforeCheckBoxClick", { branch: b });
+			vxJS.event.serve(that, "beforeCheckBoxClick", { branch: b, event: e });
 			b.toggleCheckBox();
 			if(cbDependence) {
 				b.propagateCheckBox();
 				b.tree.setParentCheckBox();
 			}
-			vxJS.event.serve(that, "afterCheckBoxClick", { branch: b });
+			vxJS.event.serve(that, "afterCheckBoxClick", { branch: b, event: e });
 		}
 
 		else {
 			c = this;
 			while(c !== b.element) {
 				if(c === b.labelElem) {
-					vxJS.event.serve(that, "labelClick", { branch: b });
+					vxJS.event.serve(that, "labelClick", { branch: b, event: e });
 					break;
 				}
 				c = c.parentNode;
