@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  *
- * @version 0.6.10 2013-09-26
+ * @version 0.6.11 2014-01-31
  * @author Gregor Kofler
  *
  * @param {Object} elem input element
@@ -181,7 +181,9 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 
 		else {
 			if(!xhrImgSize) {
+				xhrImg.style.display = "block";
 				xhrImgSize = vxJS.dom.getElementSize(xhrImg);
+				xhrImg.style.display = "";
 			}
 			p = vxJS.dom.getElementOffset(elem);
 			s = vxJS.dom.getElementSize(elem);
