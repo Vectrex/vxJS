@@ -6,8 +6,8 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.1 2013-11-15
- * @author Gregor Kofler, info@gregorkofler.at
+ * @version 0.4.2 2014-02-02
+ * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
  * @param {Object} xhr request configuration object
@@ -333,6 +333,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 		clearMsgBoxes();
 		clearErrors();
+		enableSubmit();
 
 		if(r) {
 			if((cmd = r.command)) {
@@ -387,6 +388,8 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		submittingElement = this;
 
 		vxJS.event.serve(that, "beforeSubmit");
+
+		disableSubmit();
 
 		if(immediateSubmit) {
 			handleXhrResponse( { command: "submit"} );
@@ -512,6 +515,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 
 	that.clearPayload = function() {
 		payload = null;
+	};
+
+	that.isSubmittingNow = function() {
+		return submittingNow;
 	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
