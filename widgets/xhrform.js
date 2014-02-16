@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.2 2014-02-02
+ * @version 0.4.3 2014-02-16
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -101,7 +101,10 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		document.body.appendChild(div);
 
 		form.target = name;
-		form.action = action + (action.indexOf("?") == -1 ? "?" : "&") +"ifuRequest=" + xhrReq.command;
+
+		if(xhrReq.command) {
+			form.action = action + (action.indexOf("?") == -1 ? "?" : "&") +"ifuRequest=" + xhrReq.command;
+		}
 
 		vxJS.event.addListener(ifrm, "load", ifuLoaded);
 	};
