@@ -1,7 +1,7 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.12 2013-11-13
+ * @version 0.4.13 2014-04-12
  * @author Gregor Kofler
  *
  * @param {Object}	HTMLTableElement or tbody element which will have functionality added
@@ -358,7 +358,11 @@ vxJS.widget.sorTable = function(table, config) {
 			vxJS.dom.addClassName(th, "disabled");
 			clickListenerId = null;
 		}
-	}
+	};
+	
+	that.getDraggedRow = function() {
+		return draggedRow.elem;
+	};
 
 	that.reSort = doSort;
 
