@@ -5,7 +5,7 @@
  *
  * focus events of input, textarea, select and a elements are "captured"
  *
- * @version 0.1.8 2013-12-20
+ * @version 0.1.9 2014-04-14
  * @author Gregor Kofler
  *
  * @param {Object} configuration (all properties are optional)
@@ -14,6 +14,9 @@
  *	content:	{Array} by vxJS.dom.parse() parseable array
  *	timeout:	{Number} seconds after which the dialog is automatically closed
  *	className:	{String} additional className of parent element
+ *	decoration:	{Array} with vxJS.dom.parse() parseable array,
+ *				which must contain two elements with "vxJS_confirm_content" and "vxJS_confirm_buttons" respectively
+ *				the decoration is only parsed once, and cannot be altered by subsequent invocations of the widget
  *
  * @return {Object} confirm object
  *
@@ -132,13 +135,27 @@ vxJS.widget.confirm = function() {
 		};
 
 		var render = function() {
+			var contentContainer	= vxJS.dom.getElementsByClassName("vxJS_confirm_content", elem)[0],
+				buttonContainer		= vxJS.dom.getElementsByClassName("vxJS_confirm_buttons", elem)[0];
+
 			elem.className = "vxJS_confirm" + (c.className ? " " + c.className : "");
 
 			if(!reRender) {
 				return;
 			}
-			vxJS.dom.deleteChildNodes(elem);
-			vxJS.dom.appendChildren(elem, [frag, renderButtons()]);
+			
+			if(contentContainer && buttonContainer) {
+				vxJS.dom.deleteChildNodes(contentContainer);
+				vxJS.dom.deleteChildNodes(buttonContainer);
+				contentContainer.appendChild(frag);
+				if(b = renderButtons()) {
+					buttonContainer.appendChild(b);
+				}
+			}
+			else {
+				vxJS.dom.deleteChildNodes(elem);
+				vxJS.dom.appendChildren(elem, [frag, renderButtons()]);
+			}
 		};
 
 		var show = function() {
@@ -206,7 +223,7 @@ vxJS.widget.confirm = function() {
 		}
 
 		elem = function() {
-			var d = "div".setProp("class", "vxJS_confirm").create();
+			var d = "div".setProp("class", "vxJS_confirm").create(vxJS.dom.parse(config.decoration || []));
 			d.style.position = vxJS.dom.allowsFixedPosition() ? "fixed" : "absolute";
 			return d;
 		}();
