@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.4 2014-04-24
+ * @version 0.4.5 2014-04-25
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -273,15 +273,25 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					continue;
 				}
 
+				// element name not previously found
+
 				if(!vals[name]) {
 					vals[name] = v;
 				}
 
-				else {
+				// found same name without hash
+
+				else if(!ndx) {
 					if(!Array.isArray(vals[name])) {
 						vals[name] = [vals[name]];
 					}
 					vals[name].push(v);
+				}
+				
+				// found same name with hash
+
+				else {
+					vals[name][ndx] = v[ndx];
 				}
 			}
 		}
