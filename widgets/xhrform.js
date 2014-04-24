@@ -6,23 +6,27 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.3 2014-02-16
+ * @version 0.4.4 2014-04-24
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
  * @param {Object} xhr request configuration object
+ * @param {Object} additional configuration settings 
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
  * served events: "ifuResponse", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
  */
 
-vxJS.widget.xhrForm = function(form, xhrReq) {
+vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	"use strict";
 
 	if (!form.nodeName || form.nodeName.toLowerCase() != "form") {
 		throw new Error("widget.xhrForm: no form element specified!");
+	}
+	if(!config) {
+		config = {};
 	}
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
@@ -127,7 +131,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 				case 'select-multiple':
 					if(typeof v[i].value != "object" || !v[i].value.length) { break; }
 					for(j = e.options.length; j--;) {
-						 e.options[j].selected = v[i].value.inArray(e.options[j].value);
+						 e.options[j].selected = v[i].value.indexOf(e.options[j].value) !== -1;
 					}
 					break;
 
@@ -146,7 +150,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 		prevErr.forEach(function(e) {
 			var n;
 			e.elements.forEach(function(elem) { vxJS.dom.removeClassName(elem, "error"); });
-			if((n = document.getElementById("error_"+e.name))) {
+			if((n = document.getElementById("error_" + e.name))) {
 				vxJS.dom.removeClassName(n, "error");
 				if(e.text && n.lastChild) {
 					n.removeChild(n.lastChild);
@@ -173,7 +177,7 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 				e.elements.forEach(function(elem) {vxJS.dom.addClassName(elem, "error"); });
 			}
 
-			if((n = document.getElementById("error_"+e.name))) {
+			if((n = document.getElementById("error_" + e.name))) {
 				vxJS.dom.addClassName(n, "error");
 				if(e.text) {
 					n.appendChild(document.createTextNode(e.text));
@@ -185,17 +189,32 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 	};
 
 	var getValues = function(fe, submit) {
-		var	 i, v, j, o, vals = {}, e;
+		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
 
 		for (i = fe.length; i--;) {
-			v = null;
-			e = fe[i];
+
+			v		= null;
+			ndx		= null;
+			e		= fe[i];
+			name	= e.name;
+
+			if(config.namesToHashes && (matches = name.match(hashRex))) {
+				name	= matches[1];
+				ndx		= matches[2];
+				v		= {};
+			}
+
 			if (e.type && !e.disabled) {
 				switch (e.type) {
 					case "radio":
 					case "checkbox":
 						if (e.checked) {
-							v = e.value;
+							if(ndx) {
+								v[ndx] = e.value;
+							}
+							else {
+								v = e.value;
+							}
 						}
 						break;
 
@@ -203,7 +222,12 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 					case "text":
 					case "password":
 					case "hidden":
-						v = e.value;
+						if(ndx) {
+							v[ndx] = e.value;
+						}
+						else {
+							v = e.value;
+						}
 						break;
 
 					case "select-multiple":
@@ -211,16 +235,28 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 							continue;
 						}
 						o = e.options;
-						v = [];
+						
+						arrValue = [];
 						for (j = o.length; j--;) {
 							if (o[j].selected || vxJS.dom.hasClassName(e, "vxJS_dualSelectBox_dest")) {
-								v.push(o[j].value);
+								arrValue.push(o[j].value);
 							}
+						}
+						if(ndx) {
+							v[ndx] = arrValue;
+						}
+						else {
+							v = arrValue;
 						}
 						break;
 
 					case "select-one":
-						v = e.options[e.selectedIndex].value;
+						if(ndx) {
+							v[ndx] = e.options[e.selectedIndex].value;
+						}
+						else {
+							v = e.options[e.selectedIndex].value;
+						}
 						break;
 
 					case "submit":
@@ -230,16 +266,22 @@ vxJS.widget.xhrForm = function(form, xhrReq) {
 							v = e.value;
 						}
 				}
-				if (v !== null) {
-					if(!vals[e.name]) {
-						vals[e.name] = v;
+
+				// continue, when no value was detected
+
+				if (v === null || (typeof v === "object" && !Object.keys(v).length)) {
+					continue;
+				}
+
+				if(!vals[name]) {
+					vals[name] = v;
+				}
+
+				else {
+					if(!Array.isArray(vals[name])) {
+						vals[name] = [vals[name]];
 					}
-					else {
-						if(!Array.isArray(vals[e.name])) {
-							vals[e.name] = [vals[e.name]];
-						}
-						vals[e.name].push(v);
-					}
+					vals[name].push(v);
 				}
 			}
 		}
