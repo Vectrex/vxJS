@@ -1,8 +1,8 @@
 /**
  * core script for vxJS framework
  *
- * @author Gregor Kofler, info@gregorkofler.at
- * @version 2.1.1 2013-09-25
+ * @author Gregor Kofler, info@gregorkofler.com
+ * @version 2.2.0 2014-04-27
  *
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -1689,6 +1689,57 @@ if(!this.vxJS) {
 			else {
 				this.set(elem, +pos || 0, 0);
 			}
+		}
+	};
+
+	/**
+	 * simple cookies library, lifted straight from MDN
+	 * https://developer.mozilla.org/en-US/docs/DOM/document.cookie
+	 * 
+	 * vxJS.cookie.setItem(name, value[, expiration[, path[, domain[, secure]]]])
+	 * vxJS.cookie.getItem(name)
+	 * vxJS.cookie.removeItem(name[, path], domain)
+	 * vxJS.cookie.hasItem(name)
+	 */
+	vxJS.cookie = {
+		getItem: function (name) {
+			return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(name).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+		},
+
+		setItem: function (name, value, expiration, path, domain, secure) {
+
+			var exp = "";
+ 
+			if (!name || /^(?:expires|max\-age|path|domain|secure)$/i.test(name)) {
+				return false;
+			}
+			if (expiration) {
+				switch (expiration.constructor) {
+					case Number:
+						exp = expiration === Infinity ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT" : "; max-age=" + expiration;
+						break;
+					case String:
+						exp = "; expires=" + expiration;
+						break;
+					case Date:
+						exp = "; expires=" + expiration.toUTCString();
+						break;
+				}
+			}
+			document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + exp + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
+			return true;
+		},
+
+		removeItem: function (name, path, domain) {
+			if (!name || !this.hasItem(name)) {
+				return false;
+			}
+			document.cookie = encodeURIComponent(name) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + ( domain ? "; domain=" + domain : "") + ( path ? "; path=" + path : "");
+			return true;
+		},
+
+		hasItem: function (name) {
+			return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(name).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
 		}
 	};
 
