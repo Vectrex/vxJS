@@ -4,12 +4,15 @@
  * .section elements within .vxJS_tabThis form the views
  * the first h2 element of a .section is used as tab label
  * tabs inherit both text content and classNames of their respective h2 elements
- *
- * @version 0.2.4 2013-10-07
+ * 
+ * pushState() is used when config.setHash is set and browser support suffices
+ * 
+ * @version 0.3.0 2014-05-16
  * @author Gregor Kofler
  *
- * @param {Object} optional root elemement searched for tabs, defaults to document
- * @param {Object} optional configuration parameters:
+ * @param [{Object} HTMLElement]:
+ * 		root elemement searched for tabs, defaults to document
+ * @param [{Object} config]:
  *		tabWrap: {String | Array} nodeName(s) of extra container element(s) for each tab
  *		shortenLabelsTo: {Number} shorten labels to the given number of chars or preceeding word boundary
  *		setHash: {Boolean} when true, tab ids will modify URI hash
@@ -18,106 +21,140 @@
  *
  * served events: "beforeTabClick", "afterTabClick"
  */
-/*global vxJS*/
 
-vxJS.widget.simpleTabs = function() {
+/*jslint browser: true, eqeq: true, plusplus: true, vars: true, white: true */
 
-	var conf;
+vxJS.widget.simpleTabs = (function() {
 
-	var switchTabs = function(bar, to) {
-
-		var l = bar.last, i, t;
-
-		if(!to || l.tab == to) { return; }
-
-		for(i = bar.tabs.length; i--;) {
-			t = bar.tabs[i];
-			if(t.tab === to) {
-
-				if(t.id && conf.setHash) {
-					window.location = "#" + t.id;
-				}
-
-				l.visibility = false;
-				vxJS.dom.removeClassName(l.tab, "shown");
-				l.page.style.display = "none";
-
-				vxJS.dom.addClassName(to, "shown");
-				t.visibility = true;
-				t.page.style.display = "";
-				bar.last = t;
-				break;
-			}
-		}
-	};
+	"use strict";
+	
+	var conf, supportsHistory = vxJS.hasHostMethods(window.history, ["pushState", "replaceState"]), tabBars = [];
 
 	var TabBar = function() {
 		this.tabs = [];
 	};
 
 	TabBar.prototype = {
+
 		enable: function() {
 			this.inactive = false;
 			vxJS.dom.removeClassName(this.element, "disabled");
 		},
+
 		disable: function() {
 			this.inactive = true;
 			vxJS.dom.addClassName(this.element, "disabled");
 		},
-		getTabByNdx: function(ndx) {
-			return this.tabs[ndx];
-		},
-		getTabById: function(id) {
-			var t, i;
-			for(i = this.tabs.length; i--;) {
-				t = this.tabs[i];
-				if(t.id && t.id == id) {
-					return t;
+
+		getTabByElement: function(elem) {
+			var l = this.tabs.length;
+			while(l--) {
+				if(this.tabs[l].tab === elem) {
+					return this.tabs[l];
 				}
 			}
 		},
-		gotoPrevTab: function() {
-			switchTabs(this, this.last.prevTab.tab);
+
+		getTabByNdx: function(ndx) {
+			return this.tabs[ndx];
 		},
-		gotoNextTab: function() {
-			switchTabs(this, this.last.nextTab.tab);
-		},
-		focus: function(tab) {
-			if(tab) {
-				switchTabs(this, tab.tab);
+
+		getTabById: function(id) {
+			var l = this.tabs.length;
+			while(l--) {
+				if(this.tabs[l].id === id) {
+					return this.tabs[l];
+				}
 			}
-			var a = this.last.tab.getElementsByTagName("a");
+		},
+
+		gotoTab: function(tab) {
+			var l = this.last;
+
+			if(!tab || this.tabs.indexOf(tab) === -1 || l === tab) {
+				return;
+			}
+
+			l.visibility = false;
+			vxJS.dom.removeClassName(l.tab, "shown");
+			l.page.style.display = "none";
+
+			vxJS.dom.addClassName(tab.tab, "shown");
+			tab.visibility = true;
+			tab.page.style.display = "";
+
+			this.last = tab;
+		},
+		
+		gotoPrevTab: function() {
+			this.gotoTab(this.last.prevTab);
+		},
+
+		gotoNextTab: function() {
+			this.gotoTab(this.last.nextTab);
+		},
+
+		focus: function(tab) {
+			var a;
+
+			this.gotoTab(tab);
+			a = this.last.tab.getElementsByTagName("a");
 			if(a && a[0]) {
 				a[0].focus();
 			}
 		}
 	};
 
-	return function(root, config) {
-		var tabbed = vxJS.dom.getElementsByClassName("vxJS_tabThis", root), i = tabbed.length, hash = window.location.hash.slice(1) || "", tabs = [];
+	if(supportsHistory) {
+		vxJS.event.addListener(window, "popstate", function(e) {
+			var l = tabBars.length, found;
 
-		if(!i) {
-			return;
-		}
+			if(e.state) {
+				while(l--) {
+					if(found = tabBars[l].getTabById(e.state)) {
+						break;
+					}
+				}
+			}
+			if(found) {
+				tabBars[l].gotoTab(found);
+			}
+		});
+	}
+
+	return function(root, config) {
+		var tabbed = vxJS.dom.getElementsByClassName("vxJS_tabThis", root), tbCount = tabbed.length, hash = window.location.hash.slice(1) || "";
+
 		conf = config || {};
 
 		var clickListener = function(e, bar) {
-
+			var tab;
+			
 			if(!bar.inactive) {
 				vxJS.event.serve(bar, "beforeTabClick");
-				switchTabs(bar, (!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
+				tab = bar.getTabByElement((!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
+				bar.gotoTab(tab);
 				vxJS.event.serve(bar, "afterTabClick");
+
+				if(tab.id && conf.setHash) {
+					if(supportsHistory) {
+						window.history.pushState(tab.id, "", "#" + tab.id);
+					}
+					else {
+						window.location = "#" + tab.id;						
+					}
+				}
 			}
 
 			vxJS.event.preventDefault(e);
 		};
 
-		for( ;i--; ) {
+		while(tbCount--) {
 			(function(container) {
 				var secs = vxJS.dom.getElementsByClassName("section", container),
-					ctrl = new TabBar(), h, ul, init, i = 0, l = secs.length, label = "", txt, id, t, li, a, w, wl;
+					ctrl = new TabBar(), h, ul, init, i, l, label = "", txt, id, t, li, a, w, wl;
 
-				for(; i < l; ++i) {
+				for(i = 0, l = secs.length; i < l; ++i) {
 					h = secs[i].getElementsByTagName("h2");
 
 					if(h[0]) {
@@ -195,9 +232,14 @@ vxJS.widget.simpleTabs = function() {
 				container.insertBefore(ctrl.element, container.firstChild);
 
 				vxJS.event.addListener(ctrl, "click", clickListener);
-				tabs.push(ctrl);
-			})(tabbed[i]);
+				tabBars.push(ctrl);
+				
+				if(supportsHistory && init.id && conf.setHash) {
+					window.history.replaceState(init.id, "", "#" + init.id);
+				}
+
+			}(tabbed[tbCount]));
 		}
-		return tabs;
+		return tabBars;
 	};
-}();
+}());
