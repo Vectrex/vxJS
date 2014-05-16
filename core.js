@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.2.1 2014-05-16
+ * @version 2.2.2 2014-05-16
  *
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -567,8 +567,7 @@ if(!this.vxJS) {
 		blanks: /\s+/
 	};
 
-	var win		= global,
-		doc		= global.document,
+	var doc		= global.document,
 		html	= doc.documentElement;
 
 	var isHostMethod = function(o, m) {
@@ -923,7 +922,7 @@ if(!this.vxJS) {
 			addListener: function(obj, type, cb) {
 				var n = "__ID__" + (regNdx++), f, nat, elem = obj.element;
 
-				if(nat = (obj.nodeType && obj.nodeType === 1 || obj === doc || obj === win || elem && !this.isCustomEvent(elem, type))) {
+				if(nat = (obj.nodeType && obj.nodeType === 1 || obj === doc || obj === window || elem && !this.isCustomEvent(elem, type))) {
 					switch (model) {
 						case "W3C":
 							(elem || obj).addEventListener(type, f = function(e) { cb.apply(e.target, [e, obj]); }, false);
@@ -1582,7 +1581,7 @@ if(!this.vxJS) {
 				}
 				else if(typeof window.innerWidth === "number") {
 					f = function() {
-						return new Coord(win.innerWidth, win.innerHeight);
+						return new Coord(window.innerWidth, window.innerHeight);
 					};
 				}
 				if(f) {
