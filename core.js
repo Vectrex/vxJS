@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.2.0 2014-04-27
+ * @version 2.2.1 2014-05-16
  *
  * kudos to David Mark's "My Library" at http://www.cinsoft.net
  * some code snippets are taken straight from his scripts
@@ -1348,8 +1348,8 @@ if(!this.vxJS) {
 
 			while(p && p !== container) {
 				if(p !== body && p !== html) {
-					pos.x -= p.scrollLeft;
-					pos.y -= p.scrollTop;
+					pos.x -= p.scrollLeft || 0;
+					pos.y -= p.scrollTop || 0;
 				}
 				if(p === oP) {
 					if(p !== body) {
@@ -1744,6 +1744,7 @@ if(!this.vxJS) {
 	};
 
 	vxJS.isHostMethod		= isHostMethod;
+	vxJS.hasHostMethods		= hasHostMethods;
 	vxJS.isEmpty			= isEmpty;
 	vxJS.merge				= merge;
 	vxJS.collectionToArray	= collectionToArray;
