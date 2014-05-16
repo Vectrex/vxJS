@@ -106,8 +106,7 @@ vxJS.widget.simpleTabs = (function() {
 	};
 
 	if(supportsHistory) {
-		window.addEventListener("popstate", function(e) {
-		//vxJS.event.addListener(window, "popstate", function(e) {
+		vxJS.event.addListener(window, "popstate", function(e) {
 			var l = tabBars.length, found;
 
 			if(e.state) {
