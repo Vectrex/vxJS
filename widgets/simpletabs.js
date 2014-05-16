@@ -7,7 +7,7 @@
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.3.0 2014-05-16
+ * @version 0.3.1 2014-05-16
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -68,7 +68,7 @@ vxJS.widget.simpleTabs = (function() {
 			}
 		},
 
-		gotoTab: function(tab) {
+		gotoTab: function(tab, pushState) {
 			var l = this.last;
 
 			if(!tab || this.tabs.indexOf(tab) === -1 || l === tab) {
@@ -84,20 +84,31 @@ vxJS.widget.simpleTabs = (function() {
 			tab.page.style.display = "";
 
 			this.last = tab;
-		},
-		
-		gotoPrevTab: function() {
-			this.gotoTab(this.last.prevTab);
+			
+			if(pushState) {
+				if(tab.id && conf.setHash) {
+					if(supportsHistory) {
+						window.history.pushState(tab.id, "", "#" + tab.id);
+					}
+					else {
+						window.location = "#" + tab.id;
+					}
+				}
+			}
 		},
 
-		gotoNextTab: function() {
-			this.gotoTab(this.last.nextTab);
+		gotoPrevTab: function(pushState) {
+			this.gotoTab(this.last.prevTab, pushState);
 		},
 
-		focus: function(tab) {
+		gotoNextTab: function(pushState) {
+			this.gotoTab(this.last.nextTab, pushState);
+		},
+
+		focus: function(tab, pushState) {
 			var a;
 
-			this.gotoTab(tab);
+			this.gotoTab(tab, pushState);
 			a = this.last.tab.getElementsByTagName("a");
 			if(a && a[0]) {
 				a[0].focus();
@@ -117,7 +128,7 @@ vxJS.widget.simpleTabs = (function() {
 				}
 			}
 			if(found) {
-				tabBars[l].gotoTab(found);
+				tabBars[l].gotoTab(found, false);
 			}
 		});
 	}
@@ -133,17 +144,8 @@ vxJS.widget.simpleTabs = (function() {
 			if(!bar.inactive) {
 				vxJS.event.serve(bar, "beforeTabClick");
 				tab = bar.getTabByElement((!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
-				bar.gotoTab(tab);
+				bar.gotoTab(tab, true);
 				vxJS.event.serve(bar, "afterTabClick");
-
-				if(tab.id && conf.setHash) {
-					if(supportsHistory) {
-						window.history.pushState(tab.id, "", "#" + tab.id);
-					}
-					else {
-						window.location = "#" + tab.id;						
-					}
-				}
 			}
 
 			vxJS.event.preventDefault(e);
