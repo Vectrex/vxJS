@@ -8,7 +8,7 @@
  *
  * @returns xhr object
  *
- * @version 4.0.0 2014-05-17
+ * @version 4.0.1 2014-05-18
  * @author Gregor Kofler
  *
  * served events: "timeout", "complete", "fail", "beforeSend"
@@ -150,7 +150,9 @@ vxJS.xhr = function(req, param, anim, cb) {
 			}
 
 			else if(param.file) {
-				setHeader("X-Filename", param.filename || param.file.name);
+				setHeader("X-File-Name", param.filename || param.file.name);
+				setHeader("X-File-Size", param.file.size);
+				setHeader("X-File-Type", param.file.type);
 				for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
 					xhrO.setRequestHeader(f[i], headers[f[i]]);
 				}
