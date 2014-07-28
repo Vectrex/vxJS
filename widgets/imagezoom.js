@@ -1,8 +1,12 @@
 /**
  * simple image zoom
  *
- * @version 0.2.3 2013-09-26
+ * @version 0.2.4 2014-08-28
  * @author Gregor Kofler
+ * 
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code
+
  *
  * @param {Object} configuration (all parameters are optional)
  *	tTime:				{Number} transition time for opening/closing stage; times between image changes are compensated
@@ -22,7 +26,7 @@ vxJS.widget.imageZoom = function(config) {
 		config = {};
 	}
 
-	var that = {}, images = [], waitingFor, zoomActive, shown, tTime = config.tTime || 0.3, delay = 20;
+	var that = {}, images = [], waitingFor, zoomActive, shown, tTime = config.tTime || 0.3, delay = 16.67;
 
 	var activityLayer = (function() {
 		var d = "div".setProp("class", "activityLayer").create(), s = d.style;
@@ -80,7 +84,7 @@ vxJS.widget.imageZoom = function(config) {
 			vxJS.dom.setElementSize(shown.img, new Coord(sSize.x + (shown.size.x - sSize.x) * fxCount, sSize.y + (shown.size.y - sSize.y) * fxCount));
 			vxJS.dom.setElementPosition(stage, new Coord(sPos.x + (ePos.x - sPos.x) * fxCount, sPos.y + (ePos.y - sPos.y) * fxCount));
 			vxJS.dom.setOpacity(stage, fxCount);
-			window.setTimeout(doZoom, delay);
+			window.requestAnimationFrame(doZoom);
 		}());
 	};
 
@@ -120,7 +124,7 @@ vxJS.widget.imageZoom = function(config) {
 			}
 			vxJS.dom.setElementSize(shown.img, new Coord(sSize.x + (shown.size.x - sSize.x) * fxCount, sSize.y + (shown.size.y - sSize.y) * fxCount));
 			vxJS.dom.setElementPosition(stage, new Coord(sPos.x + (ePos.x - sPos.x) * fxCount, sPos.y + (ePos.y - sPos.y) * fxCount));
-			window.setTimeout(doZoom, delay);
+			window.requestAnimationFrame(doZoom);
 		}());
 	};
 
@@ -145,7 +149,7 @@ vxJS.widget.imageZoom = function(config) {
 				return;
 			}
 			vxJS.dom.setOpacity(stage, fxCount);
-			window.setTimeout(doZoom, delay);
+			window.requestAnimationFrame(doZoom);
 		}());
 	};
 
