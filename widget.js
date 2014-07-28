@@ -3,9 +3,12 @@
  * 
  * @version 0.6.12 2012-07-28
  * @author Gregor Kofler
- *
- * currently providing
- *
+ * 
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code
+ */
+
+/**
  * vxJS.widget.shared.overlay()
  * vxJS.widget.shared.hiLite(text, node, className)
  * vxJS.widget.shared.shadeTableRows(parameterObject)

@@ -2,11 +2,13 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.2.2 2014-05-16
+ * @version 2.3.0 2014-07-28
  *
- * kudos to David Mark's "My Library" at http://www.cinsoft.net
- * some code snippets are taken straight from his scripts
- *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code
+ */
+
+/**
  * @todo purgeEvents() for removing listeners before removing DOM nodes
  * @todo cw us style
  * @todo gEBCN() for multiple class names
@@ -85,28 +87,34 @@ Color.prototype = {
 };
 
 /**
- * native object and prototype augmentation
- *
+ * polyfills
+ * 
  * Function.bind(newContext)
  * Array arr	= Object.keys()
  * Object obj	= Object.create()
  * Boolean res	= Array.isArray()
- * Boolean res	= Array.prototype.inArray(needle)
  * number pos	= Array.prototype.indexOf(needle)
- * Array arr	= Array.prototype.copy()
- * Array arr	= Array.prototype.fill(value, count)
  * Array arr	= Array.prototype.map(callback[,this])
  * Array arr	= Array.prototype.filter(callback[,this])
  * Array.prototype.forEach(callback[,this])
+ * String.trim()
+ * 
+ * 
+ * 
+ * native object and prototype augmentation
+ *
+ * Boolean res	= Array.prototype.inArray(needle)
+ * Array arr	= Array.prototype.copy()
+ * Array.prototype.fill(value, count)
+ * Array.prototype.swap(position1, position2)
  *
  * String formatted Number = Number.toFormattedString(Number decimals, String dec_point, String thousands_sep)
  * (locale-free alternative for Number.toLocaleString())
  *
- * String str	= String.trim()
- * String str	= String.lpad()
- * String str	= String.rpad()
- * String str	= String.shortenToLen(length)
- * String str | Date d	= String.toDateTime(locale, return as date object)
+ * String str	= String.prototype.lpad()
+ * String str	= String.prototype.rpad()
+ * String str	= String.prototype.shortenToLen(length)
+ * String str | Date d	= String.prototype.toDateTime(locale, return as date object)
  * String str	= String.toUcFirst()
  */
 
@@ -147,15 +155,6 @@ if(!Array.isArray) {
 	Array.isArray = function(a) { return Object.prototype.toString.call(a) == '[object Array]'; };
 }
 
-Array.prototype.copy = function () { return this.slice(0); };
-
-Array.prototype.fill = function(val, cnt) {
-	while(cnt--) {
-		this.push(val);
-	}
-	return this;
-};
-
 if(!Array.prototype.forEach) {
 	Array.prototype.forEach = function(f, that) {
 		var i = 0, l = this.length;
@@ -194,19 +193,7 @@ if(!Array.prototype.filter) {
 	};
 }
 
-Array.prototype.swap = function(a, b) {
-	if(typeof b === "undefined") { b = ++a; }
-	if(a < 0 || a >= this.length || b < 0 || b >= this.length) { return; }
-	var c = this[a];
-	this[a] = this[b];
-	this[b] = c;
-};
-
 if(!Array.prototype.indexOf) {
-	Array.prototype.inArray = function(needle) {
-		for (var i = this.length; i--;) { if(this[i] === needle) { return true; }}
-		return false;
-	};
 	Array.prototype.indexOf = function(s, from) {
 		var l = this.length, f = +from || 0;
 		f = f < 0 ? Math.ceil(f) + l : Math.floor(f);
@@ -218,11 +205,33 @@ if(!Array.prototype.indexOf) {
 		return -1;
 	};
 }
-else {
-	Array.prototype.inArray = function(needle) {
-		return !(this.indexOf(needle) == -1);
+
+if(!String.prototype.trim) {
+	String.prototype.trim = function() {
+		return this.replace(/^\s\s*/, "").replace(/\s+$/, "");
 	};
 }
+
+Array.prototype.copy = function () { return this.slice(0); };
+
+Array.prototype.fill = function(val, cnt) {
+	while(cnt--) {
+		this.push(val);
+	}
+	return this;
+};
+
+Array.prototype.swap = function(a, b) {
+	if(typeof b === "undefined") { b = ++a; }
+	if(a < 0 || a >= this.length || b < 0 || b >= this.length) { return; }
+	var c = this[a];
+	this[a] = this[b];
+	this[b] = c;
+};
+
+Array.prototype.inArray = function(needle) {
+	return !(this.indexOf(needle) == -1);
+};
 
 Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 	var f, p, t = "";
@@ -243,12 +252,6 @@ Number.prototype.toFormattedString = function(dec, decPoint, thdSep) {
 	}
 	return (this < 0 ? "-" : "") + p[0] + (p[1] ? (decPoint + p[1]) : "");
 };
-
-if(!String.prototype.trim) {
-	String.prototype.trim = function() {
-		return this.replace(/^\s\s*/, "").replace(/\s+$/, "");
-	};
-}
 
 String.prototype.lpad = function(len, fchar) {
 	var i = len-this.length, pad = "", f = fchar || " ";
@@ -447,7 +450,7 @@ Date.prototype.getCW = function(usStyle) {
 
 /**
  * creates DOM element, adds previously set attributes and adds optional child node(s) or text node
- * e.g. "div".create("p".create("Ich bin ein Absatz"));
+ * e.g. "div".create("p".create("foo"));
  */
 String.prototype.create = function(children) {
 	var i, a, e = document.createElement(this);
@@ -508,7 +511,7 @@ String.prototype.setProp = function(n, v) {
 };
 
 /**
- * creates DOM elements for each element in array
+ * creates DOM elements for each tag name in array
  * e.g. ["td","td","td"].create();
  */
 Array.prototype.create = function(children) {
@@ -520,7 +523,7 @@ Array.prototype.create = function(children) {
 };
 
 /**
- * sets one or more attributes for each element in array
+ * sets one or more properties for each element in array
  * e.g. ["td","td"].setProp("class","myClass");
  */
 Array.prototype.setProp = function(n, v) {
@@ -531,14 +534,13 @@ Array.prototype.setProp = function(n, v) {
 };
 
 /**
- * encloses array elements with given tags
+ * create DOM elements by wrapping array elements tags
  * if argument is an array every element is enclosed in all tags given in array
  * e.g. ["id","name","address"].domWrapWithTag("th");
  *      ["id","name","address"].domWrapWithTag(["a","strong","div"]);
  */
 Array.prototype.domWrapWithTag = function(tag) {
-	var i, j;
-	var tags = "acronym|address|applet|area|a|base|basefont|big|blockquote|body|br|b|caption|center|cite|code|dd|dfn|dir|div|dl|dt|em|font|form|h1|h2|h3|h4|h5|h6|head|hr|html|img|input|i|kbd|link|li|map|menu|meta|ol|option|param|pre|p|q|samp|script|select|small|strike|strong|style|sub|sup|table|tbody|td|textarea|th|title|tr|tt|ul|u|var".split("|");
+	var i, j, tags = "acronym|address|applet|area|a|base|basefont|big|blockquote|body|br|b|caption|center|cite|code|dd|dfn|dir|div|dl|dt|em|font|form|h1|h2|h3|h4|h5|h6|head|hr|html|img|input|i|kbd|link|li|map|menu|meta|ol|option|param|pre|p|q|samp|script|select|small|strike|strong|style|sub|sup|table|tbody|td|textarea|th|title|tr|tt|ul|u|var".split("|");
 	if (typeof tag === "string") {
 		for (i = 0; i < this.length; ++i) {
 			if (tags.inArray(this[i]))	{ this[i] = tag.create(this[i].create()); }
@@ -552,6 +554,32 @@ Array.prototype.domWrapWithTag = function(tag) {
 	}
 	return this;
 };
+
+/**
+ * polyfill for window.requestAnimationFrame and window.cancelAnimationFrame
+ * 
+ * slightly adapted from Paul Irish' original solution
+ * http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
+ * 
+ * @todo find more appropriate location in source files
+ */
+(function() {
+	var vendors = ["webkit", "moz"], i, l = vendors.length, vp, now, lastTime = 0, nextTime;
+
+	for (i = 0; i < l && !window.requestAnimationFrame; ++i) {
+		vp = vendors[i];
+		window.requestAnimationFrame	= window[vp + "RequestAnimationFrame"];
+		window.cancelAnimationFrame		= window[vp + "CancelAnimationFrame"] || window[vp + "CancelRequestAnimationFrame"];
+	}
+	if (!window.requestAnimationFrame || !window.cancelAnimationFrame) {
+		window.requestAnimationFrame = function(cb) {
+			now = +new Date;
+			nextTime = Math.max(lastTime + 16, now);
+			return setTimeout(function() { cb(lastTime = nextTime); }, nextTime - now);
+        };
+        window.cancelAnimationFrame = clearTimeout;
+    }
+}());
 
 /**
  * namespaced objects

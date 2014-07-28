@@ -1,40 +1,46 @@
 /**
- * provides xmlHttpRequest object
+ * provide XHR functionality
  *
+ * @version 4.1.0 2014-07-28
+ * @author Gregor Kofler
+ * 
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code
+*/
+
+"use strict";
+
+/**
+ * get host XHR object 
+ */
+vxJS.xhrObj = function() {
+	var	ok;
+
+	// any reasonable browser
+
+	try { ok = new XMLHttpRequest(); }						catch (e) { }
+	if(ok) {
+		return function() { return new XMLHttpRequest(); };
+	}
+	// IE6
+
+	try { ok = new ActiveXObject("Microsoft.XMLHTTP"); }	catch (e) { }
+	if(ok) {
+		return function() { return new ActiveXObject("Microsoft.XMLHTTP"); };
+	}
+	throw Error("vxJS.xhr: Can't instantiate XMLHttpRequest!");
+}();
+
+/**
+ * XHR wrapper
+ * 
  * @param {Object} request, { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
  * @param {Object} param, object containing all additional parameters needed by request
  * @param {Object} animation, object containing a node reference
  * @param {Object} container with callback functions { completed: {Function}, timeout: {Function} }
  *
- * @returns xhr object
- *
- * @version 4.0.1 2014-05-18
- * @author Gregor Kofler
- *
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
-
-"use strict";
-
-vxJS.xhrObj = function() {
-	var	ms = ["Msxml2.XMLHTTP", "Msxml2.XMLHTTP.3.0", "Msxml2.XMLHTTP.6.0"], i, ok;
-
-	try { ok = new XMLHttpRequest(); } catch (e) {}
-	if(ok) {
-		return function() { return new XMLHttpRequest(); };
-	}
-	for (i = ms.length; i--;) {
-		try { ok = new ActiveXObject(ms[i]); } catch (e) { }
-		if(ok) {
-			return function() { return new ActiveXObject(ms[i]); };
-		}
-	}
-	if(window.createRequest) {
-		return function() { return window.createRequest(); };
-	}
-	throw Error("vxJS.xhr: Can't instantiate XMLHttpRequest!");
-}();
-
 vxJS.xhr = function(req, param, anim, cb) {
 	if(!req)	{ req = {}; }
 	if(!param)	{ param = {}; }
