@@ -1,7 +1,7 @@
 /**
  * simple image zoom
  *
- * @version 0.2.4 2014-08-28
+ * @version 0.2.5 2014-08-28
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -26,7 +26,7 @@ vxJS.widget.imageZoom = function(config) {
 		config = {};
 	}
 
-	var that = {}, images = [], waitingFor, zoomActive, shown, tTime = config.tTime || 0.3, delay = 16.67;
+	var that = {}, images = [], waitingFor, zoomActive, shown, tTime = config.tTime || 0.3, fps = 60;
 
 	var activityLayer = (function() {
 		var d = "div".setProp("class", "activityLayer").create(), s = d.style;
@@ -70,7 +70,7 @@ vxJS.widget.imageZoom = function(config) {
 		stage.style.display = "";
 
 		(function doZoom() {
-			fxCount += delay/1000/tTime;
+			fxCount += 1/fps/tTime;
 
 			if(fxCount >= 1) {
 				vxJS.dom.setElementSize(shown.img, shown.size);
@@ -112,7 +112,7 @@ vxJS.widget.imageZoom = function(config) {
 		sPos = vxJS.dom.getElementOffset(stage, null).add(new Coord(padding.x/2, padding.y/2));
 		compTime = Math.max(0.2, Math.abs((this.size.len() - sSize.len())) / this.size.len() * tTime);
 		(function doZoom() {
-			fxCount += delay/1000/compTime;
+			fxCount += 1/fps/compTime;
 
 			if(fxCount >= 1) {
 				vxJS.dom.setElementSize(shown.img, shown.size);
@@ -139,7 +139,7 @@ vxJS.widget.imageZoom = function(config) {
 		vxJS.dom.removeClassName(stage, "fullyZoomed");
 
 		(function doZoom() {
-			fxCount -= delay/1000/tTime;
+			fxCount -= 1/fps/tTime;
 
 			if(fxCount <= 0) {
 				stage.style.display = "none";
