@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.5 2014-04-25
+ * @version 0.4.7 2014-08-06
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -114,34 +114,39 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	var setValues = function(v) {
-		var i, j;
+		var val, l = v.length, m, e;
 
-		for(i = v.length; i--;) {
-			if(!(e = form.elements[v[i].name])) {
+		while(l--) {
+			if(!(e = form.elements[v[l].name])) {
 				continue;
 			}
+
+			val = v[l].value;
 
 			switch(e.type) {
 				case 'textarea':
 				case 'text':
 				case "hidden":
-					e.value = v[i].value;
-					break;
-
-				case 'select-multiple':
-					if(typeof v[i].value != "object" || !v[i].value.length) { break; }
-					for(j = e.options.length; j--;) {
-						 e.options[j].selected = v[i].value.indexOf(e.options[j].value) !== -1;
-					}
-					break;
-
-				case 'select-one':
-					e.selectedIndex = isNaN(+v[i].value) ? null : +v[i].value;
+					e.value = val;
 					break;
 
 				case 'radio':
 				case 'checkbox':
-					e.checked = !!v[i].value;
+					e.checked = !!val;
+					break;
+
+				case 'select-one':
+					e.selectedIndex = isNaN(+val) ? null : +v[l].value;
+					break;
+
+				case 'select-multiple':
+					if(Array.isArray(val)) {
+						for(m = e.options.length; m--;) {
+							 e.options[m].selected = val.indexOf(e.options[m].value) !== -1;
+						}
+					}
+					break;
+
 			}
 		}
 	};
@@ -559,6 +564,19 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	that.getSubmittedValues = function() {
 		return submittedValues;
 	};
+	
+	/**
+	 * allows setting of form values - "normalizes" data for internal function
+	 */
+	that.setValues = function(v) {
+		var k = Object.keys(v), l = k.length, formData = [];
+		
+		while(l--) {
+			formData.push({name: k[l], value: v[k[l]]}); 
+		}
+		
+		setValues(formData);
+	};
 
 	that.getLastXhrResponse = function() {
 		return lastXhrResponse;
@@ -577,7 +595,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
-	vxJS.event.addListener(xhr, "timeout", function() { window.alert("Response took to long!");});
+	vxJS.event.addListener(xhr, "timeout", function() {
+		vxJS.dom.removeClassName(throbber, "active");
+		enableSubmit();
+		window.alert("Response took to long!");
+	});
 
 	that.element = form;
 
