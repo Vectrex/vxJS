@@ -99,8 +99,6 @@ Color.prototype = {
  * Array.prototype.forEach(callback[,this])
  * String.trim()
  * 
- * 
- * 
  * native object and prototype augmentation
  *
  * Boolean res	= Array.prototype.inArray(needle)
@@ -116,6 +114,10 @@ Color.prototype = {
  * String str	= String.prototype.shortenToLen(length)
  * String str | Date d	= String.prototype.toDateTime(locale, return as date object)
  * String str	= String.toUcFirst()
+ * 
+ * String str	= Date.prototype.format(formatString)
+ * Number num	= Date.prototype.getAbsoluteDays()
+ * Number num	= Date.prototype.getCW()
  */
 
 if(typeof Function.prototype.bind !== "function") {

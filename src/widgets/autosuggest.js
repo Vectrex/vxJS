@@ -5,7 +5,7 @@
  * @author Gregor Kofler
  *
  * @param {Object} elem input element
- * @param {Object} xhr request object containing command and URI
+ * @param {Object} object containing entire XHR configuration
  * @param {Object} config additional parameters to configure dropdown
  *	maxEntries:			{Number} max entries in list
  *	keyElem:			{Object} optional input element for storing key values

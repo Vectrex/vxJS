@@ -21,7 +21,7 @@
  *	customHide:		{Function} callback function applying fx, when element is hidden
  *	alignTo:		{Object} element to which the calendar gets aligned to, defaults to formElem
  *
- * @param {Object} XHR Parameters for adding additional via XHR retrieved information
+ * @param {Object}	optional XHR configuration
  *
  * @return {Object} calendar widget
  *

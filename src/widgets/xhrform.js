@@ -6,11 +6,11 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.7 2014-08-06
+ * @version 0.4.10 2014-08-25
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
- * @param {Object} xhr request configuration object
+ * @param {Object} XHR configuration object
  * @param {Object} additional configuration settings 
  *
  * @todo improve enableSubmit(), disableSubmit()
@@ -32,7 +32,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
 		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
-		xhr = vxJS.xhr(xhrReq), lastXhrResponse, throbberSize,
+		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse, throbberSize,
 		throbber = function() {
 			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
 			i.style.position = "absolute";
@@ -124,19 +124,16 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			val = v[l].value;
 
 			switch(e.type) {
-				case 'textarea':
-				case 'text':
+				case "textarea":
+				case "text":
 				case "hidden":
-					e.value = val;
+				case "select-one":
+					e.value = val || "";
 					break;
 
 				case 'radio':
 				case 'checkbox':
 					e.checked = !!val;
-					break;
-
-				case 'select-one':
-					e.selectedIndex = isNaN(+val) ? null : +v[l].value;
 					break;
 
 				case 'select-multiple':
@@ -389,7 +386,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	 * fill message boxes, serve event
 	 */
 	var handleXhrResponse = function(response) {
-		var i, n, v = [], e = [], m, c, cmd, r = response || this.response;
+		var l, n, v = [], e = [], m, c, cmd, r = response || this.response;
 
 		clearMsgBoxes();
 		clearErrors();
@@ -415,19 +412,21 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			}
 
 			if(r.elements) {
-				for(i = r.elements.length; i--;) {
-					n = r.elements[i].name;
-					if(r.elements[i].value) { v.push({name: n, value: r.elements[i].value }); }
-					if(r.elements[i].error) { e.push({name: n, text: r.elements[i].errorText || null}); }
+				l = r.elements.length;
+				while(l--) {
+					n = r.elements[l].name;
+					if(r.elements[l].value) { v.push({name: n, value: r.elements[l].value }); }
+					if(r.elements[l].error) { e.push({name: n, text: r.elements[l].errorText || null}); }
 				}
 				setValues(v);
 				setErrors(e);
 			}
 
 			if((m = r.msgBoxes)) {
-				for (i = m.length; i--;) {
-					if(m[i].id && (c = findMsgBox(m[i].id))) {
-						c.appendChild(vxJS.dom.parse(m[i].elements));
+				l = m.length;
+				while(l--) {
+					if(m[l].id && (c = findMsgBox(m[l].id))) {
+						c.appendChild(vxJS.dom.parse(m[l].elements));
 					}
 				}
 			}
@@ -460,7 +459,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			v = getValues(form.elements, this);
 			vxJS.merge(v, payload);
 
-			xhr.use(null, { elements: v }, { node: throbber }).submit();
+			xhr.use(null, v, { node: throbber }).submit();
 
 			submittedValues = v;
 		}

@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 4.1.0 2014-07-28
+ * @version 5.0.1 2014-08-25
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -116,6 +116,57 @@ vxJS.xhr = function(req, param, anim, cb) {
 	var setHeader = function(field, value) {
 		headers[field] = value;
 	};
+	
+	/**
+	 * try to build query string from mixed and nested data as it is done by PHP
+	 */
+	var buildQueryString = function(data) {
+
+		var parameters = [], key, ndx;
+
+		var builQueryParameter = function(key, val) {
+
+			var k, parameters = [];
+
+			if(typeof val === "function") {
+				return "";
+			}
+			if (true === val) {
+				return encodeURIComponent(key) + "=1";
+			}
+			if (false === val) {
+				return encodeURIComponent(key) + "=0";
+			}
+			if (val === null) {
+				return encodeURIComponent(key) + "=";
+			}
+			if (Array.isArray(val)) {
+				ndx = 0;
+	            val.forEach(function(a) {
+	            	parameters.push(builQueryParameter(key + "[" + ndx++ + "]", a));
+	            });
+	            return parameters.join("&");
+	        }
+			if (typeof(val) === "object") {
+				for (k in val) {
+					if(val.hasOwnProperty(k)) {
+						parameters.push(builQueryParameter(key + "[" + k + "]", val[k]));
+					}
+				}
+				return parameters.join('&');
+			}
+
+			return encodeURIComponent(key) + "=" + encodeURIComponent(val);
+	    };
+
+		for (key in data) {
+			if(data.hasOwnProperty(key)) {
+				parameters.push(builQueryParameter(key, data[key]));
+			}
+		}
+
+	    return parameters.join("&");
+	};
 
 	var submit = function() {
 		var l = window.location, i, f,
@@ -132,16 +183,30 @@ vxJS.xhr = function(req, param, anim, cb) {
 			xhrO.overrideMimeType("text/xml");
 		}
 
+		// do GET
+
 		if(req.method && req.method.toUpperCase() == "GET") {
-			xhrO.open( "GET", uri += (uri.indexOf("?") !== -1 ? "&" : "?") + (new Date()).getTime() + "&xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)), true);
+			xhrO.open( "GET",
+					uri += (uri.indexOf("?") !== -1 ? "&" : "?") +
+					(new Date()).getTime() +
+					"&" +
+					(req.useJsonSerialization ?
+						"xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param)) :
+						buildQueryString(param)
+					)
+			, true);
+
 			for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
 				xhrO.setRequestHeader(f[i], headers[f[i]]);
 			}
+
 			xhrO.onreadystatechange = stateChange;
 			vxJS.event.serve(that, "beforeSend");
 			xhrO.send(null);
 		}
 
+		// do POST
+		
 		else {
 			xhrO.open("POST",uri, true);
 
@@ -152,9 +217,17 @@ vxJS.xhr = function(req, param, anim, cb) {
 				}
 				xhrO.onreadystatechange = stateChange;
 				vxJS.event.serve(that, "beforeSend");
-				xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+				
+				if(req.useJsonSerialization) {
+					xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+				}
+				else {
+					xhrO.send(buildQueryString(param));
+				}
 			}
 
+			// do POST with file upload
+			
 			else if(param.file) {
 				setHeader("X-File-Name", param.filename || param.file.name);
 				setHeader("X-File-Size", param.file.size);
