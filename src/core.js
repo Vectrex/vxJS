@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.3.0 2014-07-28
+ * @version 2.3.1 2014-08-26
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -410,25 +410,33 @@ String.prototype.toUcFirst = function() {
 };
 
 Date.prototype.format = function(format) {
-	var	d = ""+this.getDate(),
-		m = (this.getMonth()+1),
-		y = this.getFullYear(),
-		w = this.getCW(),
-		z = ""+(w === 1 && m === 12 ? y+1 : w >= 52 && m === 1 ? y-1 : y);
+	var	that = this, 
+		c = {
+			"%h": function() { return "" + that.getHours(); },
+			"%H": function() { return ("" + that.getHours()).lpad(2, "0"); },
+			"%i": function() { return "" + that.getMinutes(); },
+			"%I": function() { return ("" + that.getMinutes()).lpad(2, "0"); },
+			"%s": function() { return "" + that.getSeconds(); },
+			"%S": function() { return ("" + that.getSeconds()).lpad(2, "0"); },
+			"%d": function() { return "" + that.getDate(); },
+			"%D": function() { return ("" + that.getDate()).lpad(2, "0"); },
+			"%m": function() { return "" + (that.getMonth() + 1); },
+			"%M": function() { return ("" + (that.getMonth() + 1)).lpad(2, "0"); },
+			"%y": function() { return ("" + that.getFullYear()).slice(-2); },
+			"%Y": function() { return "" + that.getFullYear(); },
+			"%w": function() { return "" + that.getCW(); },
+			"%W": function() { return ("" + that.getCW()).lpad(2, "0"); },
+			"%z": function() {
+					var w = that.getCW(), m = that.getMonth();
+					return "" + (w === 1 && m === 11 ? that.getFullYear() + 1 : w >= 52 && !m ? that.getFullYear() - 1 : that.getFullYear());
+				},
+			"%Z": function() {
+				var w = that.getCW(), m = that.getMonth();
+				return ("" + (w === 1 && m === 11 ? that.getFullYear() + 1 : w >= 52 && !m ? that.getFullYear() - 1 : that.getFullYear())).lpad(2, "0");
+			}
+		};
 
-	var c = {
-		"%d": d,
-		"%D": d.lpad(2, "0"),
-		"%m": ""+m,
-		"%M": (""+m).lpad(2, "0"),
-		"%y": (""+y).slice(-2),
-		"%Y": ""+y,
-		"%w": ""+w,
-		"%W": (""+w).lpad(2, "0"),
-		"%z": z,
-		"%Z": z.lpad(2, "0")
-	};
-	return format.replace(/%[dDmMyYwWzZ]{1}/g, function(m) { return c[m]; });
+	return format.replace(/%[hisdmywz]{1}/gi, function(m) { return c[m](); });
 };
 
 Date.prototype.getAbsoluteDays = function() {
