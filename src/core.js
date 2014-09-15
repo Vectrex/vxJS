@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.3.1 2014-08-26
+ * @version 2.4.0 2014-09-15
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -88,7 +88,7 @@ Color.prototype = {
 
 /**
  * polyfills
- * 
+ *
  * Function.bind(newContext)
  * Array arr	= Object.keys()
  * Object obj	= Object.create()
@@ -96,14 +96,14 @@ Color.prototype = {
  * number pos	= Array.prototype.indexOf(needle)
  * Array arr	= Array.prototype.map(callback[,this])
  * Array arr	= Array.prototype.filter(callback[,this])
+ * Array arr	= Array.prototype.fill(value, [start = 0[, end = this.length]])
  * Array.prototype.forEach(callback[,this])
  * String.trim()
- * 
+ *
  * native object and prototype augmentation
  *
  * Boolean res	= Array.prototype.inArray(needle)
  * Array arr	= Array.prototype.copy()
- * Array.prototype.fill(value, count)
  * Array.prototype.swap(position1, position2)
  *
  * String formatted Number = Number.toFormattedString(Number decimals, String dec_point, String thousands_sep)
@@ -114,7 +114,7 @@ Color.prototype = {
  * String str	= String.prototype.shortenToLen(length)
  * String str | Date d	= String.prototype.toDateTime(locale, return as date object)
  * String str	= String.toUcFirst()
- * 
+ *
  * String str	= Date.prototype.format(formatString)
  * Number num	= Date.prototype.getAbsoluteDays()
  * Number num	= Date.prototype.getCW()
@@ -214,14 +214,24 @@ if(!String.prototype.trim) {
 	};
 }
 
-Array.prototype.copy = function () { return this.slice(0); };
-
-Array.prototype.fill = function(val, cnt) {
-	while(cnt--) {
-		this.push(val);
-	}
-	return this;
+Array.prototype.copy = function () {
+	return this.slice(0);
 };
+
+if(!Array.prototype.fill) {
+	Array.prototype.fill = function(val) {
+		var copy	= Object(this),
+			len		= +copy.length || 0,
+			start	= +arguments[1] || 0,
+			end		= typeof arguments[2] === "undefined" ? len : (+end || 0),
+			i		= start < 0	? Math.max(len + start, 0)	: Math.min(start, len),
+			l		= end > 0	? Math.max(len + end, 0)	: Math.min(end, len);
+		while(i < l) {
+			copy[i++] = val;
+		}
+		return copy;
+	};
+}
 
 Array.prototype.swap = function(a, b) {
 	if(typeof b === "undefined") { b = ++a; }
@@ -410,7 +420,7 @@ String.prototype.toUcFirst = function() {
 };
 
 Date.prototype.format = function(format) {
-	var	that = this, 
+	var	that = this,
 		c = {
 			"%h": function() { return "" + that.getHours(); },
 			"%H": function() { return ("" + that.getHours()).lpad(2, "0"); },
@@ -567,10 +577,10 @@ Array.prototype.domWrapWithTag = function(tag) {
 
 /**
  * polyfill for window.requestAnimationFrame and window.cancelAnimationFrame
- * 
+ *
  * slightly adapted from Paul Irish' original solution
  * http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
- * 
+ *
  * @todo find more appropriate location in source files
  */
 (function() {
@@ -1732,7 +1742,7 @@ if(!this.vxJS) {
 	/**
 	 * simple cookies library, lifted straight from MDN
 	 * https://developer.mozilla.org/en-US/docs/DOM/document.cookie
-	 * 
+	 *
 	 * vxJS.cookie.setItem(name, value[, expiration[, path[, domain[, secure]]]])
 	 * vxJS.cookie.getItem(name)
 	 * vxJS.cookie.removeItem(name[, path], domain)
@@ -1746,7 +1756,7 @@ if(!this.vxJS) {
 		setItem: function (name, value, expiration, path, domain, secure) {
 
 			var exp = "";
- 
+
 			if (!name || /^(?:expires|max\-age|path|domain|secure)$/i.test(name)) {
 				return false;
 			}
