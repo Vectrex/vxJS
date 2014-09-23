@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.10 2014-08-25
+ * @version 0.4.12 2014-09-23
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -47,6 +47,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		if(!submittingElement) {
 			return;
 		}
+		
 		if(!throbberSize) {
 
 			// ensure that the dimensions can be calculated
@@ -55,9 +56,30 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			throbberSize = vxJS.dom.getElementSize(throbber);
 			throbber.style.display = "";
 		}
+
 		p = vxJS.dom.getElementOffset(submittingElement);
 		s = vxJS.dom.getElementSize(submittingElement);
-		p.x += s.x+4;
+
+		// parse element attribute to customize throbber position
+
+		switch(submittingElement.getAttribute("data-throbber-position")) {
+
+			case "outside-left":
+				p.x -= throbberSize.x;
+				break;
+
+			case "inside-left":
+				p.x += throbberSize.x;
+				break;
+
+			case "inside-right":
+				p.x += s.x - throbberSize.x;
+				break;
+
+			default:
+				p.x += s.x;
+		}
+
 		p.y += (s.y-throbberSize.y)/2;
 		vxJS.dom.setElementPosition(throbber, p);
 	};
