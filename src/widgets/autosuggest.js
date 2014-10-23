@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  *
- * @version 0.6.11 2014-01-31
+ * @version 0.6.12 2014-10-23
  * @author Gregor Kofler
  *
  * @param {Object} elem input element
@@ -191,7 +191,11 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 			p.y += (s.y-xhrImgSize.y)/2;
 			vxJS.dom.setElementPosition(xhrImg, p);
 
-			xhr.use(null, { text: v }, { node: xhrImg }).submit();
+			xhr.use(
+				null,
+				vxJS.merge(xhr.getParameters, { text: v }),
+				{ node: xhrImg }
+			).submit();
 		}
 	};
 

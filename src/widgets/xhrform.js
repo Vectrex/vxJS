@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.4.12 2014-09-23
+ * @version 0.5.0 2014-10-23
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -533,7 +533,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		v = getValues(form.elements, this);
 		vxJS.merge(v, payload);
 
-		xhr.use(null, { elements: v }, { node: null } ).submit();
+		xhr.use(null, v, { node: throbber }).submit();
 
 		submittedValues = v;
 	};

@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.0.1 2014-08-25
+ * @version 5.1.0 2014-10-23
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -13,7 +13,7 @@
 /**
  * get host XHR object 
  */
-vxJS.xhrObj = function() {
+vxJS.xhrObj = (function() {
 	var	ok;
 
 	// any reasonable browser
@@ -29,7 +29,7 @@ vxJS.xhrObj = function() {
 		return function() { return new ActiveXObject("Microsoft.XMLHTTP"); };
 	}
 	throw Error("vxJS.xhr: Can't instantiate XMLHttpRequest!");
-}();
+}());
 
 /**
  * XHR wrapper
@@ -72,12 +72,12 @@ vxJS.xhr = function(req, param, anim, cb) {
 	var startTimer = function() {
 		if(timeout > 0) {
 			timer = window.setTimeout( function() {
-					abort();
-					vxJS.event.serve(that, "timeout");
-					if(cb && typeof cb.timeout === "function") {
-						cb.timeout.call(that);
-					}
-				}, timeout);
+				abort();
+				vxJS.event.serve(that, "timeout");
+				if(cb && typeof cb.timeout === "function") {
+					cb.timeout.call(that);
+				}
+			}, timeout);
 		}
 		if(anim.node) {
 			vxJS.dom.addClassName(anim.node, "active");
@@ -249,16 +249,36 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	that.use = function(r, p, a, c) {
-		vxJS.merge(req,		r);
-		vxJS.merge(param,	p);
-		vxJS.merge(anim,	a);
-		if(typeof cb === "object") {
-			vxJS.merge(cb, c);
+		if(r) {
+			req	= vxJS.merge(req, r);
 		}
-		else {
-			cb = c;
+		if(p) {
+			param = p;
 		}
+		if(a) {
+			anim = a;
+		}
+		if(c) {
+			cb	= c;
+		}
+
 		return this;
+	};
+	
+	that.getRequestParameters = function() {
+		return req;
+	};
+	
+	that.getParameters = function() {
+		return param;
+	};
+
+	that.getAnimationParameters = function() {
+		return anim;
+	};
+	
+	that.getCallbacks = function() {
+		return cb;
 	};
 
 	that.xhrObj	= xhrO;
