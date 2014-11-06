@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  *
- * @version 0.6.13 2014-11-03
+ * @version 0.7.0 2014-11-06
  * @author Gregor Kofler
  *
  * @param {Object} elem input element
@@ -301,6 +301,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	that.element = layer;
 	that.xhr = xhr;
 
+	that.getInputElement			= function() { return elem; };
 	that.setGenerateEntriesCallback	= function(cb) { generateEntriesCallback = cb; };
 	that.getChosen					= function() { return chosen; };
 
