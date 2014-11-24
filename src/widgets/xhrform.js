@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.5.0 2014-10-23
+ * @version 0.6.0 2014-11-24
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -388,7 +388,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			}
 		};
 
-		(function() {
+		(function pollCallback() {
 			if(!xhr) {
 				xhr = vxJS.xhr({ command: "apcPoll" }, { id: apcHidden.value });
 				vxJS.event.addListener(xhr, "complete", parseApc);
@@ -396,7 +396,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			else {
 				xhr.use();
 			}
-			apcPollTimeout = window.setTimeout(arguments.callee, 1000);
+			apcPollTimeout = window.setTimeout(pollCallback, 1000);
 		})();
 	};
 
@@ -488,23 +488,21 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	that.addSubmit = function(elem) {
-		if(elem.nodeName.toUpperCase() === "INPUT" && elem.form !== form) {
-			throw Error("widget.xhrForm: form element not found!");
-		}
-
 		vxJS.event.addListener(elem, "click", handleClick);
+		return this;
 	};
 
 	that.addMessageBox = function(elem, id) {
-		if(!elem) { return; }
 		msgBoxes.push({
 			container: elem,
 			id: id || "MsgBox" + msgBoxes.length
 		});
+		return this;
 	};
 
 	that.clearErrors = function() {
 		clearErrors();
+		return this;
 	};
 
 	that.getErrors = function() {
@@ -523,6 +521,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					inp[i]);
 			}
 		}
+		return this;
 	};
 
 	that.forceRequest = function() {
@@ -536,14 +535,17 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		xhr.use(null, v, { node: throbber }).submit();
 
 		submittedValues = v;
+		return this;
 	};
 
 	that.disableImmediateSubmit = function() {
 		immediateSubmit = false;
+		return this;
 	};
 
 	that.enableImmediateSubmit = function() {
 		immediateSubmit = true;
+		return this;
 	};
 
 	that.enableApcUpload = function() {
@@ -576,16 +578,14 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 				hideApcInfo();
 			}
 		}
+		return this;
 	};
 
 	that.enableIframeUpload = function() {
 		prepareIfu();
+		return this;
 	};
 
-	that.getSubmittedValues = function() {
-		return submittedValues;
-	};
-	
 	/**
 	 * allows setting of form values - "normalizes" data for internal function
 	 */
@@ -597,6 +597,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		}
 		
 		setValues(formData);
+		return this;
+	};
+
+	that.getSubmittedValues = function() {
+		return submittedValues;
 	};
 
 	that.getLastXhrResponse = function() {
@@ -605,10 +610,12 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	that.setPayload = function(pl) {
 		payload = pl;
+		return this;
 	};
 
 	that.clearPayload = function() {
 		payload = null;
+		return this;
 	};
 
 	that.isSubmittingNow = function() {
