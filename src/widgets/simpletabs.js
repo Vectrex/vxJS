@@ -3,11 +3,11 @@
  * searches for .vxJS_tabThis elements
  * .section elements within .vxJS_tabThis form the views
  * the first h2 element of a .section is used as tab label
- * tabs inherit both text content and classNames of their respective h2 elements
+ * tabs are labeled with text content of their respective h2 elements
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.4.3 2014-11-30
+ * @version 0.5.0 2014-12-02
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -27,49 +27,106 @@
 vxJS.widget.simpleTabs = (function() {
 
 	"use strict";
-	
+
 	var conf = {}, tabBars = [],
 		supportsHistory = vxJS.hasHostMethods(window.history, ["pushState", "replaceState"]);
 
 	/**
-	 * render a tab element, tabData requires a label property, an id property is optional
-	 * 
-	 * @param Object tabData
-	 * @return HTMLLIElement
+	 * Represents a single tab.
+	 * @constructor
+	 * @param {TabBar} tabBar - the bar, the tab belongs to
+	 * @param {string} label - label on tab
+	 * @param {HTMLElement} page - the "content" of a tab page
+	 * @param {string} [id] - id of tab
 	 */
-	var renderTab = function(tabData) {
-
-		var li, a, l,
-			w		= conf.tabWrap,
-			label	= conf.shortenLabelsTo ? tabData.label.shortenToLen(conf.shortenLabelsTo) : tabData.label,
-			title	= "";
-
-		if(label.length !== tabData.label.length) {
-			label += "...";
-			title = tabData.label;
-		}
-
-		a = tabData.id ? "a".setProp("href", conf.setHash ? "#" + tabData.id : "").create(label) : document.createTextNode(label);
-
-		li = "li".setProp("title", title).create();
-
-		if(!w) {
-			li.appendChild(a);
-		}
-		else if(typeof w === "string") {
-			li.appendChild(w.create(a));
-		}
-		else {
-			l = w.length;
-			while(l--) {
-				a = w[l].create(a);
-			}
-			li.appendChild(a);
-		}
-
-		return li;
+	var Tab = function(tabBar, label, page, id) {
+		this.tabBar		= tabBar;
+		this.label		= label;
+		this.page		= page;
+		this.id			= id;
+		this.render();
 	};
 
+	Tab.prototype = {
+
+		/**
+		 * create element of a single tab element, populates Tab.element
+		 * @returns {Tab}
+		 */
+		render: function() {
+
+			var li, a, l,
+				w		= conf.tabWrap,
+				label	= conf.shortenLabelsTo ? this.label.shortenToLen(conf.shortenLabelsTo) : this.label,
+				title	= "";
+
+			if(label.length !== this.label.length) {
+				label += "...";
+				title = this.label;
+			}
+
+			a = this.id ? "a".setProp("href", conf.setHash ? "#" + this.id : "").create(label) : document.createTextNode(label);
+
+			li = "li".setProp("title", title).create();
+
+			if(!w) {
+				li.appendChild(a);
+			}
+			else if(typeof w === "string") {
+				li.appendChild(w.create(a));
+			}
+			else {
+				l = w.length;
+				while(l--) {
+					a = w[l].create(a);
+				}
+				li.appendChild(a);
+			}
+
+			this.element = li;
+			return this;
+		},
+
+		/**
+		 * focus A element in tab, when present; does not show/hide pages
+		 * @returns {Tab}
+		 */
+		focus: function() {
+			var a = this.element.getElementsByTagName("a");
+			if(a && a[0]) {
+				a[0].focus();
+			}
+			return this;
+		},
+
+		/**
+		 * show page of tab, does not hide previously shown page
+		 * @returns {Tab}
+		 */
+		show: function() {
+			this.visibilty = true;
+			vxJS.dom.addClassName(this.element, "shown");
+			this.page.style.display = "";
+			return this;
+		},
+
+		/**
+		 * hide page of tab
+		 * @returns {Tab}
+		 */
+		hide: function() {
+			this.visibilty = false;
+			vxJS.dom.removeClassName(this.element, "shown");
+			this.page.style.display = "none";
+			return this;
+		}
+	};
+
+	/**
+	 * represents a tab bar containing tabs
+	 * @constructor
+	 * @param {HTMLElement} container - element holding the tab bar
+	 */
 	var TabBar = function(container) {
 		this.tabs		= [];
 		this.container	= container;
@@ -92,7 +149,7 @@ vxJS.widget.simpleTabs = (function() {
 		getTabByElement: function(elem) {
 			var l = this.tabs.length;
 			while(l--) {
-				if(this.tabs[l].tab === elem) {
+				if(this.tabs[l].element === elem) {
 					return this.tabs[l];
 				}
 			}
@@ -127,13 +184,8 @@ vxJS.widget.simpleTabs = (function() {
 				return;
 			}
 
-			l.visibility = false;
-			vxJS.dom.removeClassName(l.tab, "shown");
-			l.page.style.display = "none";
-
-			vxJS.dom.addClassName(tab.tab, "shown");
-			tab.visibility = true;
-			tab.page.style.display = "";
+			l.hide();
+			tab.show();
 
 			this.last = tab;
 			
@@ -160,39 +212,27 @@ vxJS.widget.simpleTabs = (function() {
 		},
 
 		focus: function(tab, pushState) {
-			var a;
-
 			this.gotoTab(tab, pushState);
-			a = this.last.tab.getElementsByTagName("a");
-			if(a && a[0]) {
-				a[0].focus();
-			}
+			tab.focus();
 			return this;
 		},
 		
 		/**
-		 * insert a new tab
-		 * tab data contains
+		 * create and insert a new tab
 		 * 
 		 * page:	HTMLElement
 		 * label:	String
 		 * id:		String (optional)
 		 * 
-		 * @param Object tabData
-		 * @param Object insertBefore
+		 * @param {Object} tabData - { page: {HTMLElement}, label: {string}, [id : {string}] }
+		 * @param {Tab} [insertBefore] - tab before which new tab will be inserted; when omitted, tab will be appended
 		 * @returns {TabBar}
 		 */
 		insertTab: function(tabData, insertBefore) {
 
-			var tab = {
-					tab:		renderTab(tabData),
-					page:		tabData.page,
-					id:			tabData.id,
-					visibility:	false
-				},
-				prevTab;
+			var tab = new Tab(this, tabData.label, tabData.page, tabData.id), prevTab;
 
-			tabData.page.style.display = "none";
+			tab.hide();
 
 			if(!insertBefore) {
 				prevTab = this.tabs[this.tabs.length - 1];
@@ -201,7 +241,7 @@ vxJS.widget.simpleTabs = (function() {
 				tab.prevTab	= prevTab;
 				this.tabs.push(tab);
 				this.container.insertBefore(tabData.page, prevTab.page.nextSibling);
-				this.ulElement.insertBefore(tab.tab, prevTab.tab.nextSibling);
+				this.ulElement.insertBefore(tab.element, prevTab.element.nextSibling);
 			}
 			else {
 				prevTab = insertBefore.prevTab;
@@ -213,8 +253,7 @@ vxJS.widget.simpleTabs = (function() {
 				tab.nextTab = insertBefore;
 				this.tabs.splice(this.getTabNdx(insertBefore), 0, tab);
 				this.container.insertBefore(tabData.page, insertBefore.page);
-				this.ulElement.insertBefore(tab.tab, insertBefore.tab);
-
+				this.ulElement.insertBefore(tab.element, insertBefore.element);
 			}
 
 			return this;
@@ -223,7 +262,7 @@ vxJS.widget.simpleTabs = (function() {
 		/**
 		 * remove a tab
 		 *  
-		 * @param Object tab
+		 * @param {Tab}
 		 * @returns {TabBar}
 		 */
 		removeTab: function(tab) {
@@ -237,7 +276,7 @@ vxJS.widget.simpleTabs = (function() {
 			}
 
 			this.container.removeChild(tab.page);
-			this.ulElement.removeChild(tab.tab);
+			this.ulElement.removeChild(tab.element);
 			this.tabs.splice(ndx, 1);
 
 			return this;
@@ -284,24 +323,19 @@ vxJS.widget.simpleTabs = (function() {
 		while(tbCount--) {
 			(function(container) {
 				var secs = vxJS.dom.getElementsByClassName("section", container),
-					ctrl = new TabBar(container), h, ul, init, i, l, id, t, li;
+					ctrl = new TabBar(container), h, ul, init, i, l, id, t;
 
 				for(i = 0, l = secs.length; i < l; ++i) {
 					h = secs[i].getElementsByTagName("h2");
 
 					if(h[0]) {
-						secs[i].style.display = "none";
 						id = h[0].id;
-						li = renderTab( { label: vxJS.dom.concatText(h[0]), id: id } );
-						li.className = h[0].className;
+						t = new Tab(ctrl, vxJS.dom.concatText(h[0]), secs[i], id);
+						t.hide();
 						h[0].parentNode.removeChild(h[0]);
-						t = { page: secs[i], tab: li, id: id, visibility: false };
 						ctrl.tabs.push(t);
 
-						if(id && id === hash) {
-							init = t;
-						}
-						else if(!init && secs[i].className.indexOf("default") !== -1) {
+						if((id && id === hash) || (!init && vxJS.dom.hasClassName(secs[i], "default"))) {
 							init = t;
 						}
 					}
@@ -319,17 +353,14 @@ vxJS.widget.simpleTabs = (function() {
 				for(i = 0; i < l; ++i) {
 					t = ctrl.tabs;
 
-					if(t[i] === init) {
-						t[i].page.style.display = "";
-						vxJS.dom.addClassName(t[i].tab, "shown");
-						t[i].visibility = true;
-					}
-
 					t[i].nextTab	= t[i + 1] || null;
 					t[i].prevTab	= i - 1 >= 0 ? t[i - 1] : null;
 
-					ul.appendChild(t[i].tab);
+					ul.appendChild(t[i].element);
+					
 				}
+
+				init.show();
 
 				ctrl.last		= init;
 				ctrl.ulElement	= ul;
@@ -346,7 +377,7 @@ vxJS.widget.simpleTabs = (function() {
 
 			}(tabbed[tbCount]));
 		}
-		
+
 		return tabBars;
 	};
 }());
