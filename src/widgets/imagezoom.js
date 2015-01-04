@@ -1,7 +1,7 @@
 /**
  * simple image zoom
  *
- * @version 0.2.5 2014-08-28
+ * @version 0.3.0 2015-01-03
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -213,25 +213,34 @@ vxJS.widget.imageZoom = function(config) {
 		};
 	};
 
-	vxJS.dom.getElementsByClassName("vxJS_imageZoom_a", config.zoomableContainer, "a").forEach(function(a) {
-		var item = {
-			a:		a,
-			thumb:	a.getElementsByTagName("img")[0],
-			aL:		activityLayer.cloneNode(true)
-		};
-		a.appendChild(item.aL);
-		item.listenerId = vxJS.event.addListener(a, "mouseover", preloadImage(item));
-		images.push(item);
-		vxJS.event.addListener(a, "click", zoom(item));
-	});
+	var addImages = function(img) {
+
+		// ensure array
+		
+		vxJS.collectionToArray(img).forEach(function(a) {
+			var item = {
+				a:		a,
+				thumb:	a.getElementsByTagName("img")[0],
+				aL:		activityLayer.cloneNode(true)
+			};
+			a.appendChild(item.aL);
+			item.listenerId = vxJS.event.addListener(a, "mouseover", preloadImage(item));
+			images.push(item);
+			vxJS.event.addListener(a, "click", zoom(item));
+		});
+
+	};
+
+	addImages(vxJS.dom.getElementsByClassName("vxJS_imageZoom_a", config.zoomableContainer, "a"));
+
 	vxJS.event.addListener(stage, "click", zoomOut);
 
-	that.getImages = function() { return images; };
-	that.getShown = function() { return shown; };
-	that.zoom = function(ndx) { doZoom(images[ndx]); };
-	that.hide = function() { zoomOut(true); };
-
-	that.element = stage;
+	that.addImages	= addImages;
+	that.getImages	= function() { return images; };
+	that.getShown	= function() { return shown; };
+	that.zoom		= function(ndx) { doZoom(images[ndx]); };
+	that.hide		= function() { zoomOut(true); };
+	that.element	= stage;
 
 	return that;
 };
