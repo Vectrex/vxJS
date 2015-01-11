@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.6.1 2015-01-11
+ * @version 0.6.2 2015-01-11
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -135,6 +135,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		vxJS.event.addListener(ifrm, "load", ifuLoaded);
 	};
 
+	/**
+	 * @todo allow object as values for setting values of form elements with same names
+	 */
 	var setValues = function(v) {
 		var val, l = v.length, m, e;
 
@@ -192,13 +195,23 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			if(!element) {
 				e.elements = [];
 			}
+			
+			// single element
+
 			else if(element.nodeName) {
 				e.elements = [element];
 				vxJS.dom.addClassName(element, "error");
 			}
+			
+			// elements collection
+
 			else {
 				e.elements = vxJS.collectionToArray(element);
-				e.elements.forEach(function(elem) {vxJS.dom.addClassName(elem, "error"); });
+				e.elements.forEach(function(elem, ndx) {
+					if(!e.ndx || e.ndx.indexOf(ndx) !== -1) {
+						vxJS.dom.addClassName(elem, "error");
+					}
+				});
 			}
 
 			if((n = document.getElementById("error_" + e.name))) {
@@ -215,7 +228,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	var getValues = function(fe, submit) {
 		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
 
-		for (i = fe.length; i--;) {
+		for (i = 0; i < fe.length; ++i) {
 
 			v		= null;
 			ndx		= null;
@@ -408,7 +421,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	 * fill message boxes, serve event
 	 */
 	var handleXhrResponse = function(response) {
-		var l, n, v = [], e = [], m, c, cmd, r = response || this.response;
+		var l, elem, v = [], e = [], m, c, cmd, r = response || this.response;
 
 		clearMsgBoxes();
 		clearErrors();
@@ -416,11 +429,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 		if(r) {
 			if((cmd = r.command)) {
-				if(cmd == "redirect" && r.location) {
+				if(cmd === "redirect" && r.location) {
 					window.location.href = r.location;
 					return;
 				}
-				if(cmd == "submit") {
+				if(cmd === "submit") {
 					if(apcHidden) {
 						apcPoll();
 					}
@@ -436,9 +449,20 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			if(r.elements) {
 				l = r.elements.length;
 				while(l--) {
-					n = r.elements[l].name;
-					if(r.elements[l].value) { v.push({name: n, value: r.elements[l].value }); }
-					if(r.elements[l].error) { e.push({name: n, text: r.elements[l].errorText || null}); }
+					elem = r.elements[l];
+					if(elem.value) {
+						v.push({
+							name: elem.name,
+							value: elem.value
+						});
+					}
+					if(r.elements[l].error) {
+						e.push({
+							name: elem.name,
+							text: elem.errorText || null,
+							ndx: Array.isArray(elem.ndx) ? elem.ndx : null
+						});
+					}
 				}
 				setValues(v);
 				setErrors(e);
