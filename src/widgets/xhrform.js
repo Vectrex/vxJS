@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.6.0 2014-11-24
+ * @version 0.6.1 2015-01-11
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -299,7 +299,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 				// element name not previously found
 
-				if(!vals[name]) {
+				if(typeof vals[name] === "undefined") {
 					vals[name] = v;
 				}
 
