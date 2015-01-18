@@ -5,7 +5,7 @@
  *
  * focus events of input, textarea, select and a elements are "captured"
  *
- * @version 0.1.9 2014-04-14
+ * @version 0.1.10 2015-01-18
  * @author Gregor Kofler
  *
  * @param {Object} configuration (all properties are optional)
@@ -223,7 +223,7 @@ vxJS.widget.confirm = function() {
 		}
 
 		elem = function() {
-			var d = "div".setProp("class", "vxJS_confirm").create(vxJS.dom.parse(config.decoration || []));
+			var d = "div".setProp("class", "vxJS_confirm").create(vxJS.dom.parse(c.decoration || []));
 			d.style.position = vxJS.dom.allowsFixedPosition() ? "fixed" : "absolute";
 			return d;
 		}();
