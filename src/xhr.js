@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.1.0 2014-10-23
+ * @version 5.2.0 2015-01-25
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -42,9 +42,15 @@ vxJS.xhrObj = (function() {
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
 vxJS.xhr = function(req, param, anim, cb) {
-	if(!req)	{ req = {}; }
-	if(!param)	{ param = {}; }
-	if(!anim)	{ anim = {}; }
+	if(!req) {
+		req = {};
+	}
+	if(!param) {
+		param = {};
+	}
+	if(!anim) {
+		anim = {};
+	}
 
 	var	timeout = req.timeout || 5000, timer,
 		headers = {},
@@ -174,8 +180,18 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		abort();
 
-		param.httpRequest = req.command || "";
-		param.echo = req.echo ? 1 : 0;
+		if(req.command) {
+			param.httpRequest = req.command;
+		}
+		else {
+			delete param.httpRequest;
+		}
+		if(req.echo) {
+			param.echo = 1;
+		}
+		else {
+			delete param.echo;
+		}
 
 		setHeader("X-Requested-With", "XMLHttpRequest");
 
