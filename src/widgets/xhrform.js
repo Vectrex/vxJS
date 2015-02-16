@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.6.2 2015-01-11
+ * @version 0.6.3 2015-02-16
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -226,18 +226,18 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	var getValues = function(fe, submit) {
-		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
+		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, ndx, arrValue;
 
 		for (i = 0; i < fe.length; ++i) {
 
 			v		= null;
-			ndx		= null;
+			matches	= null;
 			e		= fe[i];
 			name	= e.name;
 
 			if(config.namesToHashes && (matches = name.match(hashRex))) {
 				name	= matches[1];
-				ndx		= matches[2];
+				ndx		= matches[2];	// can also evaluate to empty string
 				v		= {};
 			}
 
@@ -259,7 +259,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					case "text":
 					case "password":
 					case "hidden":
-						if(ndx) {
+						if(matches) {
 							v[ndx] = e.value;
 						}
 						else {
@@ -313,7 +313,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 				// element name not previously found
 
 				if(typeof vals[name] === "undefined") {
-					vals[name] = v;
+
+					// when has was detected, store it as array
+
+					vals[name] = matches ? [v] : v;
+
 				}
 
 				// found same name without hash
