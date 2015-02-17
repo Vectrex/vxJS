@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.6.3 2015-02-16
+ * @version 0.6.4 2015-02-17
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -149,12 +149,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			val = v[l].value;
 
 			switch(e.type) {
-				case "textarea":
-				case "text":
-				case "hidden":
-				case "select-one":
-					e.value = val || "";
-					break;
 
 				case 'radio':
 				case 'checkbox':
@@ -169,6 +163,8 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					}
 					break;
 
+				default:
+					e.value = val || "";
 			}
 		}
 	};
@@ -243,6 +239,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 			if (e.type && !e.disabled) {
 				switch (e.type) {
+
 					case "radio":
 					case "checkbox":
 						if (e.checked) {
@@ -252,18 +249,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 							else {
 								v = e.value;
 							}
-						}
-						break;
-
-					case "textarea":
-					case "text":
-					case "password":
-					case "hidden":
-						if(matches) {
-							v[ndx] = e.value;
-						}
-						else {
-							v = e.value;
 						}
 						break;
 
@@ -300,6 +285,15 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					case "image":
 					case "button":
 						if (submit && e === submit) {
+							v = e.value;
+						}
+						break;
+
+					default:
+						if(matches) {
+							v[ndx] = e.value;
+						}
+						else {
 							v = e.value;
 						}
 				}
