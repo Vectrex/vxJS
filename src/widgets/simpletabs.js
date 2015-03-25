@@ -7,7 +7,7 @@
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.5.0 2014-12-02
+ * @version 0.5.1 2015-03-25
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -41,7 +41,7 @@ vxJS.widget.simpleTabs = (function() {
 	 */
 	var Tab = function(tabBar, label, page, id) {
 		this.tabBar		= tabBar;
-		this.label		= label;
+		this.label		= label.trim();
 		this.page		= page;
 		this.id			= id;
 		this.render();
@@ -54,16 +54,17 @@ vxJS.widget.simpleTabs = (function() {
 		 * @returns {Tab}
 		 */
 		render: function() {
+			
+			// shorten tabs, retain first and last characters
+
+			var shorten = function(txt, len) {
+				return txt.slice(0, Math.ceil(len / 2)) + "..." + txt.slice(-Math.floor(len / 2));
+			};
 
 			var li, a, l,
 				w		= conf.tabWrap,
-				label	= conf.shortenLabelsTo ? this.label.shortenToLen(conf.shortenLabelsTo) : this.label,
-				title	= "";
-
-			if(label.length !== this.label.length) {
-				label += "...";
-				title = this.label;
-			}
+				label	= (conf.shortenLabelsTo  && this.label.length > conf.shortenLabelsTo) ? shorten(this.label, conf.shortenLabelsTo) : this.label,
+				title	= (conf.shortenLabelsTo  && this.label.length > conf.shortenLabelsTo) ? this.label : "";
 
 			a = this.id ? "a".setProp("href", conf.setHash ? "#" + this.id : "").create(label) : document.createTextNode(label);
 
