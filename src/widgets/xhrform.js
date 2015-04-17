@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.6.4 2015-02-17
+ * @version 0.7.0 2015-04-17
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -645,13 +645,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
-	vxJS.event.addListener(xhr, "timeout", function() {
-		vxJS.dom.removeClassName(throbber, "active");
-		enableSubmit();
-		window.alert("Response took to long!");
-	});
+	vxJS.event.addListener(xhr, "fail", enableSubmit);
+	vxJS.event.addListener(xhr, "timeout", enableSubmit);
 
-	that.element = form;
+	that.element	= form;
+	that.xhr		= xhr;
 
 	return that;
 };

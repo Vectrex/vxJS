@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.4.0 2014-09-15
+ * @version 2.5.0 2015-04-16
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -649,16 +649,35 @@ if(!this.vxJS) {
 		return true;
 	};
 
-	var merge = function(o, add) {
-		var p;
-		if(typeof o !== "object" || typeof add !== "object") {
-			return;
+	var merge = (function() {
+		if(typeof Object.assign === "function") {
+			return Object.assign;
 		}
-		for(p in add) {
-			o[p] = add[p];
-		}
-		return o;
-	};
+
+		// simplified polyfill for Object.assign()
+
+		return function(o, add) {
+			var p, l;
+
+			if(typeof o !== "object") {
+				throw new TypeError('Cannot convert first argument to object');
+			}
+
+			for(l = 1; l < arguments.length; ++l) {
+				add = arguments[l];
+				if(add === null || add === undefined) {
+					continue;
+				}
+				add = Object(arguments[l]);
+				for(p in add) {
+					if(add.hasOwnProperty(p)) {
+						o[p] = add[p];
+					}
+				}
+			}
+			return o;
+		};
+	}());
 
 	var collectionToArray = function(o) {
 		var a = [], l = o.length, i = 0;
@@ -900,7 +919,7 @@ if(!this.vxJS) {
 						el["on"+type]();
 				}
 			},
-
+			
 			addDomReadyListener: function() {
 				var drListener = function(e) {
 					var i = 0, l = domReadyReg.length;
@@ -929,6 +948,12 @@ if(!this.vxJS) {
 					domReadyReg.push(cb);
 				};
 			}(),
+
+			addXhrListener: function(type, cb) {
+				var n = "__ID__" + (regNdx++);
+				registry.push({ id: n, elem: "xhr", type: type, fn: null, callback: cb, custom: true });
+				return n;
+			},
 
 			/**
 			 * add mousewheel listener - gets special treatment
@@ -1068,6 +1093,15 @@ if(!this.vxJS) {
 				while((r = registry[i++])) {
 					if(r.elem === obj && r.type === type) {
 						r.fn(e);
+					}
+				}
+			},
+
+			serveXhr: function(obj, type) {
+				var i = 0, r;
+				while((r = registry[i++])) {
+					if(r.elem === "xhr" && r.type === type) {
+						 r.callback.apply(obj); 
 					}
 				}
 			},

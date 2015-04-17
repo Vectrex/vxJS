@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.2.0 2015-01-25
+ * @version 5.5.0 2015-04-17
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -37,36 +37,26 @@ vxJS.xhrObj = (function() {
  * @param {Object} request, { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
  * @param {Object} param, object containing all additional parameters needed by request
  * @param {Object} animation, object containing a node reference
- * @param {Object} container with callback functions { completed: {Function}, timeout: {Function} }
+ * @param {Object} container with callback functions { complete: {Function}, timeout: {Function}, fail: {Function} }
  *
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
 vxJS.xhr = function(req, param, anim, cb) {
-	if(!req) {
-		req = {};
-	}
-	if(!param) {
-		param = {};
-	}
-	if(!anim) {
-		anim = {};
-	}
+	if(!req)	{ req = {}; }
+	if(!param)	{ param = {}; }
+	if(!anim)	{ anim = {}; }
 
 	var	timeout = req.timeout || 5000, timer,
 		headers = {},
 		xhrO = vxJS.xhrObj(), that = { response: {} };
 
-	var stopTimer = function() {
-		if(timer) {
-			window.clearTimeout(timer);
-		}
+	var abort = function() {
 		if(anim.node) {
 			vxJS.dom.removeClassName(anim.node, "active");
 		}
-	};
-
-	var abort = function() {
-		stopTimer();
+		if(timer) {
+			window.clearTimeout(timer);
+		}
 		if(xhrO) {
 			xhrO.onreadystatechange = function() {};
 			if(xhrO.readyState !== 0 && xhrO.readyState !== 4) {
@@ -79,21 +69,24 @@ vxJS.xhr = function(req, param, anim, cb) {
 		if(timeout > 0) {
 			timer = window.setTimeout( function() {
 				abort();
-				vxJS.event.serve(that, "timeout");
+
 				if(cb && typeof cb.timeout === "function") {
 					cb.timeout.call(that);
 				}
+
+				vxJS.event.serve(that, "timeout");
+				vxJS.event.serveXhr(that, "timeout");
+
 			}, timeout);
-		}
-		if(anim.node) {
-			vxJS.dom.addClassName(anim.node, "active");
 		}
 	};
 
 	var stateChange = function () {
 		if(xhrO.readyState === 4) {
+
+			abort();
+
 			if(xhrO.status >= 200 && xhrO.status < 300 || xhrO.status === 1223) {
-				abort();
 
 				if(req.forcePlainTextResponse) {
 					that.response = xhrO.responseText;
@@ -105,16 +98,21 @@ vxJS.xhr = function(req, param, anim, cb) {
 					that.response = JSON.parse(xhrO.responseText || "{}");
 				}
 
-				vxJS.event.serve(that, "complete");
 				if(cb && typeof cb.complete === "function") {
 					cb.complete.call(that);
 				}
+
+				vxJS.event.serve(that, "complete");
+				vxJS.event.serveXhr(that, "complete");
+
 			}
 			else {
-				vxJS.event.serve(that, "fail");
 				if(cb && typeof cb.fail === "function") {
 					cb.fail.call(that);
 				}
+
+				vxJS.event.serve(that, "fail");
+				vxJS.event.serveXhr(that, "fail");
 			}
 		}
 	};
@@ -183,14 +181,8 @@ vxJS.xhr = function(req, param, anim, cb) {
 		if(req.command) {
 			param.httpRequest = req.command;
 		}
-		else {
-			delete param.httpRequest;
-		}
 		if(req.echo) {
 			param.echo = 1;
-		}
-		else {
-			delete param.echo;
 		}
 
 		setHeader("X-Requested-With", "XMLHttpRequest");
@@ -257,6 +249,10 @@ vxJS.xhr = function(req, param, anim, cb) {
 			}
 		}
 		startTimer();
+		
+		if(anim.node) {
+			vxJS.dom.addClassName(anim.node, "active");
+		}
 	};
 
 	that.setHeader = function(field, value) {
