@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.0 2015-04-17
+ * @version 0.7.1 2015-05-04
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -419,7 +419,12 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	 * fill message boxes, serve event
 	 */
 	var handleXhrResponse = function(response) {
-		var l, elem, v = [], e = [], m, c, cmd, r = response || this.response;
+		var l, elem, v = [], e = [], m, c, cmd, r;
+
+		if(!response) {
+			response = this.response;
+		}
+		r = response.response && response.echo ? response.response : response;
 
 		clearMsgBoxes();
 		clearErrors();
@@ -476,8 +481,8 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			}
 		}
 
-		lastXhrResponse = r;
-		vxJS.event.serve(that, "check", r);
+		lastXhrResponse = response;
+		vxJS.event.serve(that, "check", response);
 	};
 
 	var handleClick = function(e) {
