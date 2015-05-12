@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.5.0 2015-04-16
+ * @version 2.5.1 2015-05-12
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -209,9 +209,12 @@ if(!Array.prototype.indexOf) {
 }
 
 if(!String.prototype.trim) {
-	String.prototype.trim = function() {
-		return this.replace(/^\s\s*/, "").replace(/\s+$/, "");
-	};
+	(function() {
+	    var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+	    String.prototype.trim = function() {
+	    	return this.replace(rtrim, '');
+	    };
+	})();
 }
 
 Array.prototype.copy = function () {
