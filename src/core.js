@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.5.1 2015-05-12
+ * @version 2.6.0 2015-07-11
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -1271,6 +1271,10 @@ if(!this.vxJS) {
 				c.splice(i ,1);
 				elem.className = c.join(" ");
 			}
+		},
+		
+		toggleClassName: function(elem, cN) {
+			this[this.hasClassName(elem, cN) ? "removeClassName" : "addClassName"](elem, cN);
 		},
 
 		appendChildren: function(elem, c) {
