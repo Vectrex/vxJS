@@ -7,7 +7,7 @@
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.5.1 2015-03-25
+ * @version 0.6.0 2015-07-27
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -120,6 +120,34 @@ vxJS.widget.simpleTabs = (function() {
 			vxJS.dom.removeClassName(this.element, "shown");
 			this.page.style.display = "none";
 			return this;
+		},
+
+		/**
+		 * disable a tab
+		 * @returns {Tab}
+		 */
+		disable: function() {
+			this.disabled = true;
+			vxJS.dom.addClassName(this.element, "disabled");
+			return this;
+		},
+		
+		/**
+		 * enable a tab
+		 * @returns {Tab}
+		 */
+		enable: function() {
+			this.disabled = false;
+			vxJS.dom.removeClassName(this.element, "disabled");
+			return this;
+		},
+
+		/**
+		 * get disabled state
+		 * @returns {Boolean}
+		 */
+		isDisabled: function() {
+			return !!this.disabled;
 		}
 	};
 
@@ -309,10 +337,7 @@ vxJS.widget.simpleTabs = (function() {
 		var clickListener = function(e, bar) {
 			var tab = bar.getTabByElement((!this.nodeName || this.nodeName.toUpperCase() !== "LI") ? vxJS.dom.getParentElement(this, "li") : this);
 
-			if(!tab) {
-				return;
-			}
-			if(!bar.inactive) {
+			if(tab && !tab.isDisabled() && !bar.inactive) {
 				vxJS.event.serve(bar, "beforeTabClick");
 				bar.gotoTab(tab, true);
 				vxJS.event.serve(bar, "afterTabClick");
