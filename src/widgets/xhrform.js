@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.1 2015-05-04
+ * @version 0.7.2 2015-09-20
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -204,7 +204,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			else {
 				e.elements = vxJS.collectionToArray(element);
 				e.elements.forEach(function(elem, ndx) {
-					if(!e.ndx || e.ndx.indexOf(ndx) !== -1) {
+					if(!e.ndx || e.ndx[ndx]) {
 						vxJS.dom.addClassName(elem, "error");
 					}
 				});
@@ -419,7 +419,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	 * fill message boxes, serve event
 	 */
 	var handleXhrResponse = function(response) {
-		var l, elem, v = [], e = [], m, c, cmd, r;
+		var l, elem, v = [], e = [], m, c, cmd, r, ndx = null;
 
 		if(!response) {
 			response = this.response;
@@ -459,11 +459,20 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 							value: elem.value
 						});
 					}
-					if(r.elements[l].error) {
+					if(elem.error) {
+						if(typeof elem.error === "object") {
+							ndx = [];
+							Object.keys(elem.error).forEach(function(k) {
+								if(elem.error[k]) {
+									ndx[k] = true;
+								}
+							});
+						}
+
 						e.push({
 							name: elem.name,
 							text: elem.errorText || null,
-							ndx: Array.isArray(elem.ndx) ? elem.ndx : null
+							ndx: ndx
 						});
 					}
 				}
