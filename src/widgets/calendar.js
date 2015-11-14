@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.5 2013-09-26
+ * @version 2.2.6 2015-11-14
  * @author Gregor Kofler
  *
  * @param {Object} (optional) formElem element receiving data value
@@ -202,7 +202,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 
 		if(!config.noYearInput) {
 			input = "input".setProp([["maxLength", 4], ["class", "year"]]).create();
-			bar = ["div".setProp("class", "selMon").create(bar), "div".setProp("class", "selYear").create(["span".setProp("class", "prevYear").create("\u00AB"), input,"span".setProp("class", "nextYear").create("\u00BB")])];
+			bar = ["div".setProp("class", "selMon").create(bar), "div".setProp("class", "selYear").create(["span".setProp("class", "prevYear").create(), input,"span".setProp("class", "nextYear").create()])];
 		}
 
 		layer = "div".setProp("class", config.skinClass || "vxJS_calendar").create("div".create(["div".setProp("class", "vxJS_dragBar").create(bar), table]));

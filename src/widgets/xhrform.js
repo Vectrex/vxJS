@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.3 2015-11-10
+ * @version 0.7.4 2015-11-14
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -412,6 +412,21 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	/**
+	 * wrap form.submit()
+	 * place throbber, disable submit buttons, enable APC polling
+	 */
+	var submit = function() {
+		if(apcHidden) {
+			apcPoll();
+		}
+		posThrobber();
+		vxJS.dom.addClassName(throbber, "active");
+		submittedByApp = true;
+		disableSubmit();
+		form.submit();
+	};
+
+	/**
 	 * handle response
 	 *
 	 * can handle commands (redirect, submit),
@@ -437,14 +452,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 					return;
 				}
 				if(cmd === "submit") {
-					if(apcHidden) {
-						apcPoll();
-					}
-					posThrobber();
-					vxJS.dom.addClassName(throbber, "active");
-					submittedByApp = true;
-					disableSubmit();
-					form.submit();
+					submit();
 					return;
 				}
 			}
@@ -663,6 +671,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	vxJS.event.addListener(xhr, "timeout", enableSubmit);
 
 	that.element	= form;
+	that.submit		= submit;
 	that.xhr		= xhr;
 
 	return that;
