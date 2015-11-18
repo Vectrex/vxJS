@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.4 2015-11-14
+ * @version 0.7.5 2015-11-18
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -15,7 +15,7 @@
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
- * served events: "ifuResponse", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
+ * served events: "ifuResponse", "beforeResponseCheck", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq, config) {
@@ -431,7 +431,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	 *
 	 * can handle commands (redirect, submit),
 	 * set values of elements and corresponding errors
-	 * fill message boxes, serve event
+	 * fill message boxes, serve events before and after parsing response
 	 */
 	var handleXhrResponse = function(response) {
 		var l, elem, v = [], e = [], m, c, cmd, r, ndx = null;
@@ -439,7 +439,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		if(!response) {
 			response = this.response;
 		}
+
 		r = response.response && response.echo ? response.response : response;
+
+		vxJS.event.serve(that, "beforeResponseCheck", response);
 
 		clearMsgBoxes();
 		clearErrors();
