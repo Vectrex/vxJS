@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.5 2015-11-18
+ * @version 0.7.6 2016-02-13
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -658,6 +658,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	that.setPayload = function(pl) {
 		payload = pl;
 		return this;
+	};
+
+	that.getPayload = function() {
+		return payload;
 	};
 
 	that.clearPayload = function() {
