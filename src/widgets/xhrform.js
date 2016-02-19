@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.7.6 2016-02-13
+ * @version 0.8.0 2016-02-17
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -135,11 +135,8 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		vxJS.event.addListener(ifrm, "load", ifuLoaded);
 	};
 
-	/**
-	 * @todo allow object as values for setting values of form elements with same names
-	 */
 	var setValues = function(v) {
-		var val, l = v.length, m, e;
+		var val, l = v.length, e, i, j;
 
 		while(l--) {
 			if(!(e = form.elements[v[l].name])) {
@@ -148,23 +145,56 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 			val = v[l].value;
 
-			switch(e.type) {
+			// NodeList requires an array of values; same types of elements are assumed
 
-				case 'radio':
-				case 'checkbox':
-					e.checked = !!val;
-					break;
+			if(e instanceof NodeList && Array.isArray(val) && e.length === val.length) {
 
-				case 'select-multiple':
-					if(Array.isArray(val)) {
-						for(m = e.options.length; m--;) {
-							 e.options[m].selected = val.indexOf(e.options[m].value) !== -1;
+				switch(e.item(0).type) {
+					case "radio":
+					case "checkbox":
+						for(i = 0; i < val.length; ++i) {
+							e[i].checked = !!val[i];
 						}
-					}
-					break;
+						break;
 
-				default:
-					e.value = val || "";
+					// select-multiple expects an array with option values that are selected 
+
+					case 'select-multiple':
+						for(i = 0; i < val.length; ++i) {
+							if(Array.isArray(val[i])) {
+								for(j = e[i].options.length; j--;) {
+									 e[i].options[j].selected = val[i].indexOf(e[i].options[j].value) !== -1;
+								}
+							}
+						}
+						break;
+	
+					default:
+						for(i = 0; i < val.length; ++i) {
+							e[i].value = val[i] || "";
+						}
+				}
+
+			}
+			
+			else if(e instanceof Node) {
+				switch(e.type) {
+					case "radio":
+					case "checkbox":
+						e.checked = !!val;
+						break;
+	
+					case 'select-multiple':
+						if(Array.isArray(val)) {
+							for(j = e.options.length; j--;) {
+								 e.options[j].selected = val.indexOf(e.options[j].value) !== -1;
+							}
+						}
+						break;
+	
+					default:
+						e.value = val || "";
+				}
 			}
 		}
 	};
