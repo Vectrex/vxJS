@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.6.0 2015-07-11
+ * @version 2.6.1 2016-02-19
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -1445,6 +1445,11 @@ if(!this.vxJS) {
 						pos.y += oP.offsetTop;
 						oP = p.offsetParent;
 					}
+				}
+				if(p.style.position === "fixed") {
+					pos.y += body.scrollTop || html.scrollTop;
+					pos.x += body.scrollLeft || html.scrollLeft;
+					break;
 				}
 				p = p.parentNode;
 			}
