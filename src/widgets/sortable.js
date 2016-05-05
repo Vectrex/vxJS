@@ -296,6 +296,16 @@ vxJS.widget.sorTable = function(table, config) {
 		tb.removeChild(tr);
 	};
 
+	that.replaceRow = function(newTr, oldTr) {
+		origSort.splice(origSort.indexOf(oldTr), 1, newTr);
+		rows.splice(rows.indexOf(oldTr), 1, newTr);
+		tb.replaceChild(newTr, oldTr);
+
+		if(activeColumn) {
+			vxJS.dom.addClassName(newTr.cells[activeColumn.ndx], "active");
+		}
+	};
+
 	that.removeAllRows = function() {
 		var lc;
 
