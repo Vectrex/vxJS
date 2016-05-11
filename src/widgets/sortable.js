@@ -1,7 +1,8 @@
 /**
  * sorTable widget
  * adds headers to table which allow sorting
- * @version 0.4.13 2014-04-12
+ * 
+ * @version 0.5.0 2016-05-10
  * @author Gregor Kofler
  *
  * @param {Object}	HTMLTableElement or tbody element which will have functionality added
