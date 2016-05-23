@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.6.1 2016-02-19
+ * @version 2.6.2 2016-05-23
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -1260,21 +1260,36 @@ if(!this.vxJS) {
 		},
 
 		addClassName: function(elem, cN) {
-			if(!this.hasClassName(elem, cN)) {
-				elem.className += (elem.className.trim().length ? " " : "") + cN;
+			if(elem.classList) {
+				elem.classList.add(cN);
+			}
+			else {
+				if(!this.hasClassName(elem, cN)) {
+					elem.className += (elem.className.trim().length ? " " : "") + cN;
+				}
 			}
 		},
 
 		removeClassName: function(elem, cN) {
-			var c = elem.className.split(Rex.blanks), i = c.indexOf(cN);
-			if(i !== -1) {
-				c.splice(i ,1);
-				elem.className = c.join(" ");
+			if(elem.classList) {
+				elem.classList.remove(cN);
+			}
+			else {
+				var c = elem.className.split(Rex.blanks), i = c.indexOf(cN);
+				if(i !== -1) {
+					c.splice(i ,1);
+					elem.className = c.join(" ");
+				}
 			}
 		},
-		
+
 		toggleClassName: function(elem, cN) {
-			this[this.hasClassName(elem, cN) ? "removeClassName" : "addClassName"](elem, cN);
+			if(elem.classList) {
+				elem.classList.toggle(cN);
+			}
+			else {
+				this[this.hasClassName(elem, cN) ? "removeClassName" : "addClassName"](elem, cN);
+			}
 		},
 
 		appendChildren: function(elem, c) {
