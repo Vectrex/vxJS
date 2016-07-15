@@ -212,7 +212,8 @@ vxJS.widget.sorTable = function(table, config) {
 			}
 
 			return function(a, b) {
-				return (a.value - b.value) * s;
+				if(a.value === b.value) { return 0; }
+				return a.value < b.value ? -s : s;
 			};
 		};
 
