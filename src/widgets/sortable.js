@@ -2,7 +2,7 @@
  * sorTable widget
  * adds headers to table which allow sorting
  * 
- * @version 0.5.0 2016-05-10
+ * @version 0.5.1 2016-07-15
  * @author Gregor Kofler
  *
  * @param {Object}	HTMLTableElement or tbody element which will have functionality added
@@ -203,18 +203,16 @@ vxJS.widget.sorTable = function(table, config) {
 
 			if(/^(?:float|float_comma)$/.test(this.format)) {
 				return function(a, b) {
-					a = +a.value;
+					a = parseFloat(a.value);
 					if(isNaN(a)) { return 1; }
-					b = +b.value;
+					b = parseFloat(b.value);
 					if(isNaN(b)) { return -1; }
-					if(a === b) { return 0; }
-					return a < b ? -s : s;
+					return (a - b) * s;
 				};
 			}
 
 			return function(a, b) {
-				if(a.value === b.value) { return 0; }
-				return a.value < b.value ? -s : s;
+				return (a.value - b.value) * s;
 			};
 		};
 
