@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.8.0 2016-02-17
+ * @version 0.8.1 2016-10-20
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -470,15 +470,14 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			response = this.response;
 		}
 
-		r = response.response && response.echo ? response.response : response;
-
 		vxJS.event.serve(that, "beforeResponseCheck", response);
 
 		clearMsgBoxes();
 		clearErrors();
 		enableSubmit();
 
-		if(r) {
+		if((r = response.response && response.echo ? response.response : response)) {
+
 			if((cmd = r.command)) {
 				if(cmd === "redirect" && r.location) {
 					window.location.href = r.location;
