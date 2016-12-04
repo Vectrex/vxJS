@@ -1,11 +1,17 @@
 {
-	"name" : "Vectrex/vxJS",
+	"name" : "vectrex/vxjs",
 	"type" : "library",
 	"description" : "cross-browser ECMAScript general-purpose library with widgets",
 	"homepage" : "https://github.com/Vectrex/vxJS",
 	"license" : "MIT",
-	"keywords" : ["javascript", "library", "browser", "widgets"],
-	"authors" : [{
+	"keywords" : [
+		"javascript",
+		"library",
+		"browser",
+		"widgets"
+	],
+	"authors" : [
+		{
 			"name" : "Gregor Kofler",
 			"email" : "info@gregorkofler.com",
 			"homepage" : "http://gregorkofler.com",
