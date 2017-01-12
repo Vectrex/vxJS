@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.5.0 2015-04-17
+ * @version 5.6.0 2017-01-11
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -237,7 +237,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 			// do POST with file upload
 			
 			else if(param.file) {
-				setHeader("X-File-Name", param.filename || param.file.name);
+				setHeader("X-File-Name", (param.filename || param.file.name).replace(/[^\x00-\x7F]/g, function(c) { return encodeURIComponent(c); }));
 				setHeader("X-File-Size", param.file.size);
 				setHeader("X-File-Type", param.file.type);
 				for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
