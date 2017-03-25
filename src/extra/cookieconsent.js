@@ -44,7 +44,16 @@
 			// build notification element
 
 			button = "button".create(config.buttonLabel || "Ok!");
-			div = "div".setProp("id", "cookieConsent").create([config.message || "We use cookies", button]);
+			
+			if(config.markup) {
+				div = "div".setProp("id", "cookieConsent").create();
+				div.innerHTML = config.markup;
+			}
+			else {
+				div = "div".setProp("id", "cookieConsent").create([config.message || "We use cookies", button]);
+			}
+
+			div.appendChild(button);
 
 			// append or prepend element depending on configuration
 
