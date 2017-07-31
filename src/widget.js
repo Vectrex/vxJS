@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.6.12 2012-07-28
+ * @version 0.7.0 2017-07-31
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -64,6 +64,8 @@ vxJS.widget.shared = {
 				vxJS.dom.setElementSize(elem, size);
 
 				resizeListenerId = vxJS.event.addListener(window, "resize", resize);
+				
+				return elem;
 			};
 
 			var hide = function() {
