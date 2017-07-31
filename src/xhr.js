@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.6.0 2017-01-11
+ * @version 5.7.0 2017-07-04
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -42,11 +42,12 @@ vxJS.xhrObj = (function() {
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
 vxJS.xhr = function(req, param, anim, cb) {
+
 	if(!req)	{ req = {}; }
 	if(!param)	{ param = {}; }
 	if(!anim)	{ anim = {}; }
 
-	var	timeout = req.timeout || 5000, timer,
+	var	timeout = req.timeout || 5000, timer, active,
 		headers = {},
 		xhrO = vxJS.xhrObj(), that = { response: {} };
 
@@ -63,6 +64,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 				xhrO.abort();
 			}
 		}
+		active = false;
 	};
 
 	var startTimer = function() {
@@ -248,6 +250,9 @@ vxJS.xhr = function(req, param, anim, cb) {
 				xhrO.send(param.file);
 			}
 		}
+		
+		active = true;
+
 		startTimer();
 		
 		if(anim.node) {
@@ -291,6 +296,10 @@ vxJS.xhr = function(req, param, anim, cb) {
 	
 	that.getCallbacks = function() {
 		return cb;
+	};
+	
+	that.isActive = function() {
+		return active;
 	};
 
 	that.xhrObj	= xhrO;
