@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.8.1 2016-10-20
+ * @version 0.8.2 2017-08-13
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -604,6 +604,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		var v;
 
 		vxJS.event.serve(that, "beforeSubmit");
+
+		disableSubmit();
+		posThrobber();
 
 		v = getValues(form.elements, this);
 		vxJS.merge(v, payload);
