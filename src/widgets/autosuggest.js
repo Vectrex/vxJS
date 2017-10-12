@@ -1,7 +1,7 @@
 /**
  * autoSuggest
  *
- * @version 0.7.0 2014-11-06
+ * @version 0.8.0 2017-10-09
  * @author Gregor Kofler
  *
  * @param {Object} elem input element
@@ -42,13 +42,9 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 		}(),
 		generateEntriesCallback, mousedownOnList,
 		xhr = vxJS.xhr(xhrReq || {}, { limit: config.maxEntries || 10, text: "" }),
-		xhrImg = function() {
-			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
-			i.style.position = "absolute";
-			vxJS.dom.setElementPosition(i,  { x: -100, y: -100 } );
-			vxJS.dom.getBody().appendChild(i);
-			return i;
-		}(), xhrImgSize;
+		wrapper = elem.parentNode.insertBefore("span".setProp("class", "vxJS_autoSuggestInputWrapper").create(), elem);
+
+	wrapper.appendChild(elem);
 
 	var setValue = function(v) {
 		elem.value = v.text;
@@ -110,8 +106,15 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 		}
 	};
 
+	var handleXhrTimeout = function() {
+		vxJS.dom.removeClassName(wrapper, "busy");
+		window.alert("Response took to long!");
+	};
+
 	var handleXhrResponse = function() {
 		var txt, r = this.response, v = elem.value.toUpperCase(), i;
+
+		vxJS.dom.removeClassName(wrapper, "busy");
 
 		if(sentString !== v || !r || !r.entries || !r.entries.length) {
 			list.fill();
@@ -180,22 +183,8 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 		// else retrieve data by XHR
 
 		else {
-			if(!xhrImgSize) {
-				xhrImg.style.display = "block";
-				xhrImgSize = vxJS.dom.getElementSize(xhrImg);
-				xhrImg.style.display = "";
-			}
-			p = vxJS.dom.getElementOffset(elem);
-			s = vxJS.dom.getElementSize(elem);
-			p.x += s.x-xhrImgSize.x-4;
-			p.y += (s.y-xhrImgSize.y)/2;
-			vxJS.dom.setElementPosition(xhrImg, p);
-
-			xhr.use(
-				null,
-				vxJS.merge(xhr.getParameters(), { text: v }),
-				{ node: xhrImg }
-			).submit();
+			vxJS.dom.addClassName(wrapper, "busy");
+			xhr.use( null, vxJS.merge(xhr.getParameters(), { text: v })).submit();
 		}
 	};
 
@@ -296,7 +285,7 @@ vxJS.widget.autoSuggest = function(elem, xhrReq, config) {
 	vxJS.event.addListener(list,	"choose",		handleChoose);
 
 	vxJS.event.addListener(xhr,		"complete",		handleXhrResponse);
-	vxJS.event.addListener(xhr,		"timeout",		function() { window.alert("Response took to long!");});
+	vxJS.event.addListener(xhr,		"timeout",		handleXhrTimeout);
 
 	that.element = layer;
 	that.xhr = xhr;
