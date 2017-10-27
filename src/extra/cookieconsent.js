@@ -3,18 +3,14 @@
  * requires vxJS core 
  */
 !(function(global) {
+	
+	"use strict";
 
 	var config = global.vxJS.cookieConsentConfig  || {}, exp;
 
 	// no cookie found?
 
 	if(!vxJS.cookie.getItem("cookie_consent")) {
-
-		// set cookie and prepare notification message, expires in 60 days as default
-
-		var exp = new Date();
-		exp.setDate(exp.getDate() + (config.expiresIn || 60));
-		vxJS.cookie.setItem("cookie_consent", "1", exp);
 
 		vxJS.event.addDomReadyListener(function() {
 			var div, button, evId, body = vxJS.dom.getBody();
@@ -23,9 +19,15 @@
 				div.parentNode.removeChild(div);
 			};
 			
-			// callback which closes notification
+			// callback which sets cookie and closes notification
 
 			var clickCallback = function() {
+
+				// set cookie and prepare notification message, expires in 60 days as default
+
+				var exp = new Date();
+				exp.setDate(exp.getDate() + (config.expiresIn || 60));
+				vxJS.cookie.setItem("cookie_consent", "1", exp);
 
 				vxJS.event.removeListener(button, clickCallback);
 				vxJS.dom.toggleClassName(body, "cookieConsentShown");
