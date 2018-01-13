@@ -1,7 +1,7 @@
 /**
  * provide XHR functionality
  *
- * @version 5.7.0 2017-07-04
+ * @version 5.8.0 2018-01-12
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -34,10 +34,10 @@ vxJS.xhrObj = (function() {
 /**
  * XHR wrapper
  * 
- * @param {Object} request, { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
+ * @param {Object} req, request { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
  * @param {Object} param, object containing all additional parameters needed by request
- * @param {Object} animation, object containing a node reference
- * @param {Object} container with callback functions { complete: {Function}, timeout: {Function}, fail: {Function} }
+ * @param {Object} anim, animation object containing a node reference
+ * @param {Object} cb, object containing callback functions { complete: {Function}, timeout: {Function}, fail: {Function} }
  *
  * served events: "timeout", "complete", "fail", "beforeSend"
  */
@@ -53,7 +53,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 	var abort = function() {
 		if(anim.node) {
-			vxJS.dom.removeClassName(anim.node, "active");
+			vxJS.dom.removeClassName(anim.node, "loading");
 		}
 		if(timer) {
 			window.clearTimeout(timer);
@@ -256,7 +256,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 		startTimer();
 		
 		if(anim.node) {
-			vxJS.dom.addClassName(anim.node, "active");
+			vxJS.dom.addClassName(anim.node, "loading");
 		}
 	};
 

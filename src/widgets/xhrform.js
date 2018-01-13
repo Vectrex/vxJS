@@ -6,12 +6,12 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.8.2 2017-08-13
+ * @version 0.9.0 2018-01-12
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
- * @param {Object} XHR configuration object
- * @param {Object} additional configuration settings 
+ * @param {Object} xhrReq configuration object
+ * @param {Object} config configuration settings
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
@@ -22,7 +22,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	"use strict";
 
-	if (!form.nodeName || form.nodeName.toLowerCase() != "form") {
+	if (!form.nodeName || form.nodeName.toLowerCase() !== "form") {
 		throw new Error("widget.xhrForm: no form element specified!");
 	}
 	if(!config) {
@@ -32,57 +32,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
 		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
-		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse, throbberSize,
-		throbber = function() {
-			var i = "div".setProp("class", "vxJS_xhrThrobber").create();
-			i.style.position = "absolute";
-			vxJS.dom.setElementPosition(i,  { x: -100, y: -100 } );
-			document.body.appendChild(i);
-			return i;
-		}();
-
-	var posThrobber = function() {
-		var p, s;
-
-		if(!submittingElement) {
-			return;
-		}
-		
-		if(!throbberSize) {
-
-			// ensure that the dimensions can be calculated
-
-			throbber.style.display = "block";
-			throbberSize = vxJS.dom.getElementSize(throbber);
-			throbber.style.display = "";
-		}
-
-		p = vxJS.dom.getElementOffset(submittingElement);
-		s = vxJS.dom.getElementSize(submittingElement);
-
-		// parse element attribute to customize throbber position
-
-		switch(submittingElement.getAttribute("data-throbber-position")) {
-
-			case "outside-left":
-				p.x -= throbberSize.x;
-				break;
-
-			case "inside-left":
-				p.x += throbberSize.x;
-				break;
-
-			case "inside-right":
-				p.x += s.x - throbberSize.x;
-				break;
-
-			default:
-				p.x += s.x;
-		}
-
-		p.y += (s.y-throbberSize.y)/2;
-		vxJS.dom.setElementPosition(throbber, p);
-	};
+		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
 	var disableSubmit = function() {
 		submittingNow = true;
@@ -103,8 +53,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 				window.clearTimeout(apcPollTimeout);
 				hideApcInfo();
 			}
-
-			vxJS.dom.removeClassName(throbber, "active");
+            if(submittingElement) {
+                vxJS.dom.removeClassName(submittingElement, "loading");
+            }
 			enableSubmit();
 
 			vxJS.event.serve(that, "ifuResponse", response);
@@ -252,7 +203,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	var getValues = function(fe, submit) {
-		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, ndx, arrValue;
+		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
 
 		for (i = 0; i < fe.length; ++i) {
 
@@ -449,8 +400,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		if(apcHidden) {
 			apcPoll();
 		}
-		posThrobber();
-		vxJS.dom.addClassName(throbber, "active");
+        if(submittingElement) {
+            vxJS.dom.addClassName(submittingElement, "loading");
+        }
 		submittedByApp = true;
 		disableSubmit();
 		form.submit();
@@ -552,12 +504,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			handleXhrResponse( { command: "submit"} );
 		}
 		else {
-			posThrobber();
-
 			v = getValues(form.elements, this);
 			vxJS.merge(v, payload);
 
-			xhr.use(null, v, { node: throbber }).submit();
+			xhr.use(null, v, { node: submittingElement }).submit();
 
 			submittedValues = v;
 		}
@@ -591,7 +541,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		if(!inp || !(i = inp.length)) { return; }
 
 		for(; --i;) {
-			if(inp[i].type == "file") {
+			if(inp[i].type === "file") {
 				inp[i].parentNode.replaceChild(
 					"input".setProp([["type", "file"], ["name", inp[i].name]]).create(),
 					inp[i]);
@@ -606,12 +556,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		vxJS.event.serve(that, "beforeSubmit");
 
 		disableSubmit();
-		posThrobber();
-
 		v = getValues(form.elements, this);
 		vxJS.merge(v, payload);
 
-		xhr.use(null, v, { node: throbber }).submit();
+		xhr.use(null, v, { node: submittingElement || null }).submit();
 
 		submittedValues = v;
 		return this;
