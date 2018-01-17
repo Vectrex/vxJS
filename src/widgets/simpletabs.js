@@ -7,7 +7,7 @@
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.6.0 2015-07-27
+ * @version 0.7.0 2018-01-18
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -68,7 +68,7 @@ vxJS.widget.simpleTabs = (function() {
 
 			a = this.id ? "a".setProp("href", conf.setHash ? "#" + this.id : "").create(label) : document.createTextNode(label);
 
-			li = "li".setProp("title", title).create();
+			li = "li".setProp( { "title": title, "class": "tab-item"} ).create();
 
 			if(!w) {
 				li.appendChild(a);
@@ -106,7 +106,7 @@ vxJS.widget.simpleTabs = (function() {
 		 */
 		show: function() {
 			this.visibilty = true;
-			vxJS.dom.addClassName(this.element, "shown");
+			vxJS.dom.addClassName(this.element, "active");
 			this.page.style.display = "";
 			return this;
 		},
@@ -117,7 +117,7 @@ vxJS.widget.simpleTabs = (function() {
 		 */
 		hide: function() {
 			this.visibilty = false;
-			vxJS.dom.removeClassName(this.element, "shown");
+			vxJS.dom.removeClassName(this.element, "active");
 			this.page.style.display = "none";
 			return this;
 		},
@@ -374,7 +374,7 @@ vxJS.widget.simpleTabs = (function() {
 					init = ctrl.tabs[0];
 				}
 
-				ul = "ul".create();
+				ul = "ul".setProp("class", "tab").create();
 
 				for(i = 0; i < l; ++i) {
 					t = ctrl.tabs;
