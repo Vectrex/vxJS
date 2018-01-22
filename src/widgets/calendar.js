@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.2.6 2015-11-14
+ * @version 2.3.0 2018-01-22
  * @author Gregor Kofler
  *
  * @param {Object} (optional) formElem element receiving data value
@@ -181,7 +181,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 					w = dayCells[i * 7].date.getCW(locale === "date_us");
 				}
 				rows[i].appendChild("td".create(w++));
-				rows[i].lastChild.className = "weekCell" + (!getFirstEnabledDay(i) ? " disabled" : "");
+				rows[i].lastChild.className = "week" + (!getFirstEnabledDay(i) ? " disabled" : "");
 				weekCells.push(rows[i].lastChild);
 			}
 		}
@@ -196,16 +196,16 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	var createCalendar = function() {
-		var d, bar = ["span".setProp("class", "prevMon").create(), "span".setProp("class", "mon").create(mNode), "span".setProp("class", "nextMon").create() ];
+		var d, bar = ["span".setProp("class", "previous-month").create(), "span".setProp("class", "month").create(mNode), "span".setProp("class", "next-month").create() ];
 
 		table	= "table".create(["thead".create(), "tbody".create()]);
 
 		if(!config.noYearInput) {
 			input = "input".setProp([["maxLength", 4], ["class", "year"]]).create();
-			bar = ["div".setProp("class", "selMon").create(bar), "div".setProp("class", "selYear").create(["span".setProp("class", "prevYear").create(), input,"span".setProp("class", "nextYear").create()])];
+			bar = ["div".setProp("class", "select-month").create(bar), "div".setProp("class", "select-year").create(["span".setProp("class", "previous-year").create(), input,"span".setProp("class", "next-year").create()])];
 		}
 
-		layer = "div".setProp("class", config.skinClass || "vxJS_calendar").create("div".create(["div".setProp("class", "vxJS_dragBar").create(bar), table]));
+		layer = "div".setProp("class", config.skinClass || "vx-calendar").create("div".create(["div".setProp("class", "navbar").create(bar), table]));
 
 		switch(locale) {
 			case "date_us":
@@ -260,25 +260,25 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			var type, n, picked, c = this.className;
 
 			switch(c) {
-				case "prevMon":
+				case "previous-month":
 					sheetDate.setMonth(sheetDate.getMonth() - 1);
 					fillCalendar();
 					type = "monthChange";
 					break;
 
-				case "nextMon":
+				case "next-month":
 					sheetDate.setMonth(sheetDate.getMonth() + 1);
 					fillCalendar();
 					type = "monthChange";
 					break;
 
-				case "prevYear":
+				case "previous-year":
 					sheetDate.setFullYear(sheetDate.getFullYear() - 1);
 					fillCalendar();
 					type = "yearChange";
 					break;
 
-				case "nextYear":
+				case "next-year":
 					sheetDate.setFullYear(sheetDate.getFullYear() + 1);
 					fillCalendar();
 					type = "yearChange";
