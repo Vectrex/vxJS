@@ -2,7 +2,7 @@
  * sorTable widget
  * adds headers to table which allow sorting
  * 
- * @version 0.5.1 2016-07-15
+ * @version 0.5.2 2018-01-21
  * @author Gregor Kofler
  *
  * @param {Object}	HTMLTableElement or tbody element which will have functionality added
@@ -136,8 +136,8 @@ vxJS.widget.sorTable = function(table, config) {
 		var i = rows.length;
 
 		if (col) {
-			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "desc" : "asc"));
-			vxJS.dom.addClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
+			vxJS.dom.removeClassName(col.elem, col.asc ? "desc" : "asc");
+			vxJS.dom.addClassName(col.elem, col.asc ? "asc" : "desc");
 			while(i--) {
 				vxJS.dom.addClassName(rows[i].cells[col.ndx], "active");
 			}
@@ -148,7 +148,7 @@ vxJS.widget.sorTable = function(table, config) {
 		var i = rows.length;
 
 		if (col) {
-			vxJS.dom.removeClassName(col.elem, "vxJS_sorTable_header_" + (col.asc ? "asc" : "desc"));
+			vxJS.dom.removeClassName(col.elem, col.asc ? "asc" : "desc");
 			while(i--) {
 				vxJS.dom.removeClassName(rows[i].cells[col.ndx], "active");
 			}
