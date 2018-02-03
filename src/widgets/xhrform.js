@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.9.0 2018-01-12
+ * @version 0.10.0 2018-02-03
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -15,7 +15,7 @@
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
- * served events: "ifuResponse", "beforeResponseCheck", "check", "beforeSubmit", "apcUpdate", "apcFinish" (only relevant when using APC in a PHP environment)
+ * served events: "ifuResponse", "beforeResponseCheck", "check", "beforeSubmit"
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq, config) {
@@ -30,7 +30,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	}
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
-		apcHidden, apcProgressBar, apcPercentage, apcPollTimeout, immediateSubmit,
+		immediateSubmit,
 		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
 		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
@@ -49,10 +49,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			try			{ response = JSON.parse((ifrm.contentDocument || ifrm.contentWindow.document).body.innerHTML); }
 			catch(e)	{ response = {}; }
 
-			if(apcPollTimeout) {
-				window.clearTimeout(apcPollTimeout);
-				hideApcInfo();
-			}
             if(submittingElement) {
                 vxJS.dom.removeClassName(submittingElement, "loading");
             }
@@ -327,79 +323,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		}
 	};
 
-	// APC functionality
-
-	var hideApcInfo = function(){
-		if(!apcPercentage && !apcProgressBar) {
-			return;
-		}
-		if(apcPercentage)	{ apcPercentage.style.display = "none"; }
-		if(apcProgressBar)	{ apcProgressBar.style.display = "none"; }
-	};
-
-	var showApcInfo = function() {
-		if(!apcPercentage && !apcProgressBar) {
-			return;
-		}
-		if(apcPercentage)	{ apcPercentage.style.display = ""; }
-		if(apcProgressBar)	{ apcProgressBar.style.display = ""; }
-	};
-
-	var updateApcInfo = function(r) {
-		if(!apcPercentage && !apcProgressBar) {
-			return;
-		}
-
-		var	p = (r.total && r.current) ? (r.current/r.total * 100).toFixed() : 0,
-			f = r.filename;
-
-		if(apcPercentage) {
-			apcPercentage.firstChild.nodeValue = p + "%";
-		}
-		if(apcProgressBar) {
-			apcProgressBar.firstChild.style.width = p + "%";
-		}
-	};
-
-	var apcPoll = function() {
-		var xhr;
-
-		showApcInfo();
-
-		var parseApc = function() {
-			var r = this.response;
-
-			if(!r || r.cancel_upload) {
-				window.clearTimeout(apcPollTimeout);
-				vxJS.event.serve(that, "apcFinish");
-				hideApcInfo();
-			}
-			else {
-				vxJS.event.serve(that, "apcUpdate");
-				updateApcInfo(r);
-			}
-		};
-
-		(function pollCallback() {
-			if(!xhr) {
-				xhr = vxJS.xhr({ command: "apcPoll" }, { id: apcHidden.value });
-				vxJS.event.addListener(xhr, "complete", parseApc);
-			}
-			else {
-				xhr.use();
-			}
-			apcPollTimeout = window.setTimeout(pollCallback, 1000);
-		})();
-	};
-
 	/**
 	 * wrap form.submit()
-	 * place throbber, disable submit buttons, enable APC polling
+	 * place throbber, disable submit buttons
 	 */
 	var submit = function() {
-		if(apcHidden) {
-			apcPoll();
-		}
         if(submittingElement) {
             vxJS.dom.addClassName(submittingElement, "loading");
         }
@@ -572,39 +500,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	that.enableImmediateSubmit = function() {
 		immediateSubmit = true;
-		return this;
-	};
-
-	that.enableApcUpload = function() {
-		if(typeof apcHidden === "undefined") {
-			apcHidden = function() {
-				var apc;
-				if(form.enctype !== "multipart/form-data" || !(apc = form.elements["APC_UPLOAD_PROGRESS"])) {
-					return false;
-				}
-				return apc;
-			}();
-
-			if(apcHidden) {
-				apcProgressBar = function() {
-					var e = vxJS.dom.getElementsByClassName("apcProgressBar", form, "div")[0];
-					if(e) {
-						vxJS.dom.cleanDOM(e);
-						return e;
-					}
-				}();
-
-				apcPercentage = function() {
-					var e = vxJS.dom.getElementsByClassName("apcPercentage", form, "span")[0];
-					if(e) {
-						e.appendChild(document.createTextNode(""));
-						return e;
-					}
-				}();
-
-				hideApcInfo();
-			}
-		}
 		return this;
 	};
 
