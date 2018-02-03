@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.10.0 2018-02-03
+ * @version 0.11.0 2018-02-03
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -31,7 +31,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		immediateSubmit,
-		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow,
+		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow, submissionCancelled,
 		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
 	var disableSubmit = function() {
@@ -426,6 +426,11 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 		vxJS.event.serve(that, "beforeSubmit");
 
+		if(submissionCancelled) {
+		    submissionCancelled = false;
+		    return;
+        }
+
 		disableSubmit();
 
 		if(immediateSubmit) {
@@ -483,7 +488,12 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 		vxJS.event.serve(that, "beforeSubmit");
 
-		disableSubmit();
+        if(submissionCancelled) {
+            submissionCancelled = false;
+            return;
+        }
+
+        disableSubmit();
 		v = getValues(form.elements, this);
 		vxJS.merge(v, payload);
 
@@ -547,6 +557,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	that.isSubmittingNow = function() {
 		return submittingNow;
 	};
+
+	that.cancelSubmission = function() {
+        submissionCancelled = true;
+    }
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
 	vxJS.event.addListener(xhr, "fail", enableSubmit);
