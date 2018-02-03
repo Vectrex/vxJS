@@ -1,39 +1,9 @@
 /**
- * provide XHR functionality
- *
- * @version 5.8.0 2018-01-12
- * @author Gregor Kofler
- * 
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code
-*/
-
-"use strict";
-
-/**
- * get host XHR object 
- */
-vxJS.xhrObj = (function() {
-	var	ok;
-
-	// any reasonable browser
-
-	try { ok = new XMLHttpRequest(); }						catch (e) { }
-	if(ok) {
-		return function() { return new XMLHttpRequest(); };
-	}
-	// IE6
-
-	try { ok = new ActiveXObject("Microsoft.XMLHTTP"); }	catch (e) { }
-	if(ok) {
-		return function() { return new ActiveXObject("Microsoft.XMLHTTP"); };
-	}
-	throw Error("vxJS.xhr: Can't instantiate XMLHttpRequest!");
-}());
-
-/**
  * XHR wrapper
- * 
+ *
+ * @version 6.0.0 2018-02-03
+ * @author Gregor Kofler
+ *
  * @param {Object} req, request { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
  * @param {Object} param, object containing all additional parameters needed by request
  * @param {Object} anim, animation object containing a node reference
@@ -43,13 +13,15 @@ vxJS.xhrObj = (function() {
  */
 vxJS.xhr = function(req, param, anim, cb) {
 
+    "use strict";
+
 	if(!req)	{ req = {}; }
 	if(!param)	{ param = {}; }
 	if(!anim)	{ anim = {}; }
 
 	var	timeout = req.timeout || 5000, timer, active,
 		headers = {},
-		xhrO = vxJS.xhrObj(), that = { response: {} };
+		xhrO = new XMLHttpRequest(), that = { response: {} };
 
 	var abort = function() {
 		if(anim.node) {
@@ -84,6 +56,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	var stateChange = function () {
+
 		if(xhrO.readyState === 4) {
 
 			abort();
@@ -130,7 +103,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		var parameters = [], key, ndx;
 
-		var builQueryParameter = function(key, val) {
+		var buildQueryParameter = function(key, val) {
 
 			var k, parameters = [];
 
@@ -149,14 +122,14 @@ vxJS.xhr = function(req, param, anim, cb) {
 			if (Array.isArray(val)) {
 				ndx = 0;
 	            val.forEach(function(a) {
-	            	parameters.push(builQueryParameter(key + "[" + ndx++ + "]", a));
+	            	parameters.push(buildQueryParameter(key + "[" + ndx++ + "]", a));
 	            });
 	            return parameters.join("&");
 	        }
 			if (typeof(val) === "object") {
 				for (k in val) {
 					if(val.hasOwnProperty(k)) {
-						parameters.push(builQueryParameter(key + "[" + k + "]", val[k]));
+						parameters.push(buildQueryParameter(key + "[" + k + "]", val[k]));
 					}
 				}
 				return parameters.join('&');
@@ -167,7 +140,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		for (key in data) {
 			if(data.hasOwnProperty(key)) {
-				parameters.push(builQueryParameter(key, data[key]));
+				parameters.push(buildQueryParameter(key, data[key]));
 			}
 		}
 
