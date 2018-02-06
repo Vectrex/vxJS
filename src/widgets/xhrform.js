@@ -15,7 +15,7 @@
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
- * served events: "ifuResponse", "beforeResponseCheck", "check", "beforeSubmit"
+ * served events: "beforeResponseCheck", "check", "beforeSubmit"
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq, config) {
@@ -29,9 +29,28 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		config = {};
 	}
 
+	var uploads = {};
+
+	var fReader = function(elem) {
+	    var reader = new FileReader();
+
+	    uploads[elem.name] = [];
+
+	    reader.addEventListener("load", function() {
+	        uploads[elem.name].push(reader.result);
+	    });
+
+        if(elem.files.length) {
+            data[elem.name] = [];
+            for(var i = 0; i < elem.files.length; ++i) {
+                reader.readAsArrayBuffer(elem.files);
+            }
+        }
+    };
+
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		immediateSubmit,
-		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow, submissionCancelled,
+		submittedValues, submittingElement, submittedByApp, submittingNow, submissionCancelled,
 		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
 	var disableSubmit = function() {
@@ -40,46 +59,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	var enableSubmit = function() {
 		submittingNow = false;
-	};
-
-	var ifuLoaded = function() {
-		var response;
-
-		if(submittedByApp) {
-			try			{ response = JSON.parse((ifrm.contentDocument || ifrm.contentWindow.document).body.innerHTML); }
-			catch(e)	{ response = {}; }
-
-            if(submittingElement) {
-                vxJS.dom.removeClassName(submittingElement, "loading");
-            }
-			enableSubmit();
-
-			vxJS.event.serve(that, "ifuResponse", response);
-
-			handleXhrResponse(response);
-		}
-	};
-
-	var prepareIfu = function() {
-		var action = form.action, div, s, name = "ifu_" + new Date().getTime();
-
-		if(ifrm) { return; }
-
-		ifrm = "iframe".setProp([["name", name], ["src", "javascript:false;"]]).create();
-		div = "div".create(ifrm);
-		s = div.style;
-		s.visibility = "hidden";
-		s.overflow = "hidden";
-		vxJS.dom.setElementSize(div, new Coord(0, 0));
-		document.body.appendChild(div);
-
-		form.target = name;
-
-		if(xhrReq && xhrReq.command) {
-			form.action = action + (action.indexOf("?") == -1 ? "?" : "&") +"ifuRequest=" + xhrReq.command;
-		}
-
-		vxJS.event.addListener(ifrm, "load", ifuLoaded);
 	};
 
 	var setValues = function(v) {
@@ -216,7 +195,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 			if (e.type && !e.disabled) {
 				switch (e.type) {
-
+                    case "file":
+                        console.log(e.files);
+				        break;
 					case "radio":
 					case "checkbox":
 						if (e.checked) {
@@ -513,11 +494,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		return this;
 	};
 
-	that.enableIframeUpload = function() {
-		prepareIfu();
-		return this;
-	};
-
 	/**
 	 * allows setting of form values - "normalizes" data for internal function
 	 */
@@ -560,7 +536,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	that.cancelSubmission = function() {
         submissionCancelled = true;
-    }
+    };
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
 	vxJS.event.addListener(xhr, "fail", enableSubmit);
