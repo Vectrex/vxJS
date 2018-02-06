@@ -29,6 +29,25 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		config = {};
 	}
 
+	var uploads = {};
+
+	var fReader = function(elem) {
+	    var reader = new FileReader();
+
+	    uploads[elem.name] = [];
+
+	    reader.addEventListener("load", function() {
+	        uploads[elem.name].push(reader.result);
+	    });
+
+        if(elem.files.length) {
+            data[elem.name] = [];
+            for(var i = 0; i < elem.files.length; ++i) {
+                reader.readAsArrayBuffer(elem.files);
+            }
+        }
+    };
+
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		immediateSubmit,
 		submittedValues, submittingElement, submittedByApp, submittingNow, submissionCancelled,
@@ -176,7 +195,9 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 			if (e.type && !e.disabled) {
 				switch (e.type) {
-
+                    case "file":
+                        console.log(e.files);
+				        break;
 					case "radio":
 					case "checkbox":
 						if (e.checked) {
@@ -515,7 +536,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	that.cancelSubmission = function() {
         submissionCancelled = true;
-    }
+    };
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
 	vxJS.event.addListener(xhr, "fail", enableSubmit);
