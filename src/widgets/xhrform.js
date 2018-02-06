@@ -15,7 +15,7 @@
  *
  * @todo improve enableSubmit(), disableSubmit()
  *
- * served events: "ifuResponse", "beforeResponseCheck", "check", "beforeSubmit"
+ * served events: "beforeResponseCheck", "check", "beforeSubmit"
  */
 
 vxJS.widget.xhrForm = function(form, xhrReq, config) {
@@ -31,7 +31,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		immediateSubmit,
-		submittedValues, submittingElement, ifrm, submittedByApp, submittingNow, submissionCancelled,
+		submittedValues, submittingElement, submittedByApp, submittingNow, submissionCancelled,
 		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
 	var disableSubmit = function() {
@@ -40,46 +40,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	var enableSubmit = function() {
 		submittingNow = false;
-	};
-
-	var ifuLoaded = function() {
-		var response;
-
-		if(submittedByApp) {
-			try			{ response = JSON.parse((ifrm.contentDocument || ifrm.contentWindow.document).body.innerHTML); }
-			catch(e)	{ response = {}; }
-
-            if(submittingElement) {
-                vxJS.dom.removeClassName(submittingElement, "loading");
-            }
-			enableSubmit();
-
-			vxJS.event.serve(that, "ifuResponse", response);
-
-			handleXhrResponse(response);
-		}
-	};
-
-	var prepareIfu = function() {
-		var action = form.action, div, s, name = "ifu_" + new Date().getTime();
-
-		if(ifrm) { return; }
-
-		ifrm = "iframe".setProp([["name", name], ["src", "javascript:false;"]]).create();
-		div = "div".create(ifrm);
-		s = div.style;
-		s.visibility = "hidden";
-		s.overflow = "hidden";
-		vxJS.dom.setElementSize(div, new Coord(0, 0));
-		document.body.appendChild(div);
-
-		form.target = name;
-
-		if(xhrReq && xhrReq.command) {
-			form.action = action + (action.indexOf("?") == -1 ? "?" : "&") +"ifuRequest=" + xhrReq.command;
-		}
-
-		vxJS.event.addListener(ifrm, "load", ifuLoaded);
 	};
 
 	var setValues = function(v) {
@@ -510,11 +470,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	that.enableImmediateSubmit = function() {
 		immediateSubmit = true;
-		return this;
-	};
-
-	that.enableIframeUpload = function() {
-		prepareIfu();
 		return this;
 	};
 
