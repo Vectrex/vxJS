@@ -20,7 +20,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 	if(!anim)	{ anim = {}; }
 
 	var	timeout = req.timeout || 5000, timer, active,
-		headers = {},
+		headers = {}, multipartBoundary = 'vxJS-xhr-boundary',
 		xhrO = new XMLHttpRequest(), that = { response: {} };
 
 	var abort = function() {
@@ -95,48 +95,40 @@ vxJS.xhr = function(req, param, anim, cb) {
 	var setHeader = function(field, value) {
 		headers[field] = value;
 	};
-	
-	/**
-	 * try to build query string from mixed and nested data as it is done by PHP
-	 */
+
+    var buildQueryParameter = function(key, val) {
+
+        var k, parameters = [], ndx;
+
+        if (true === val) {
+            return encodeURIComponent(key) + "=1";
+        }
+        if (false === val) {
+            return encodeURIComponent(key) + "=0";
+        }
+
+        if (Array.isArray(val)) {
+            ndx = 0;
+            val.forEach(function(a) {
+                parameters.push(buildQueryParameter(key + "[" + ndx++ + "]", a));
+            });
+            return parameters.join("&");
+        }
+        if (typeof(val) === "object") {
+            for (k in val) {
+                if(val.hasOwnProperty(k)) {
+                    parameters.push(buildQueryParameter(key + "[" + k + "]", val[k]));
+                }
+            }
+            return parameters.join('&');
+        }
+
+        return encodeURIComponent(key) + "=" + encodeURIComponent(val);
+    };
+
 	var buildQueryString = function(data) {
 
-		var parameters = [], key, ndx;
-
-		var buildQueryParameter = function(key, val) {
-
-			var k, parameters = [];
-
-			if(typeof val === "function") {
-				return "";
-			}
-			if (true === val) {
-				return encodeURIComponent(key) + "=1";
-			}
-			if (false === val) {
-				return encodeURIComponent(key) + "=0";
-			}
-			if (val === null) {
-				return encodeURIComponent(key) + "=";
-			}
-			if (Array.isArray(val)) {
-				ndx = 0;
-	            val.forEach(function(a) {
-	            	parameters.push(buildQueryParameter(key + "[" + ndx++ + "]", a));
-	            });
-	            return parameters.join("&");
-	        }
-			if (typeof(val) === "object") {
-				for (k in val) {
-					if(val.hasOwnProperty(k)) {
-						parameters.push(buildQueryParameter(key + "[" + k + "]", val[k]));
-					}
-				}
-				return parameters.join('&');
-			}
-
-			return encodeURIComponent(key) + "=" + encodeURIComponent(val);
-	    };
+		var parameters = [], key;
 
 		for (key in data) {
 			if(data.hasOwnProperty(key)) {
@@ -147,8 +139,16 @@ vxJS.xhr = function(req, param, anim, cb) {
 	    return parameters.join("&");
 	};
 
+	var arrayBufferToString = function(arrayBuffer) {
+        var bytes = new Uint8Array(arrayBuffer), binary = "";
+        for (var i = 0, l = bytes.length; i < l; ++i) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return binary;
+    };
+
 	var submit = function() {
-		var l = window.location, i, f,
+		var l = window.location, i, j, f, g, parameters, data,
 			uri = encodeURI(req.uri || (l.hash ? l.href.substring(0, l.href.indexOf(l.hash)) : l.href));
 
 		abort();
@@ -193,7 +193,9 @@ vxJS.xhr = function(req, param, anim, cb) {
 		else {
 			xhrO.open("POST",uri, true);
 
-			if(!req.upload) {
+			// normal POST
+
+			if(!req.upload && !req.multipart) {
 				setHeader("Content-Type", "application/x-www-form-urlencoded");
 				for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
 					xhrO.setRequestHeader(f[i], headers[f[i]]);
@@ -209,9 +211,40 @@ vxJS.xhr = function(req, param, anim, cb) {
 				}
 			}
 
+			// multipart POST
+
+			else if(req.multipart) {
+				setHeader("Content-Type", "multipart/form-data; boundary=" + multipartBoundary);
+				parameters = buildQueryString(param.formData).split("&");
+				data = "";
+
+				for(i = 0; i < parameters.length; ++i) {
+                    data += "--" + multipartBoundary + "\r\n";
+                    data += 'content-disposition: form-data; name="' + parameters[i].split("=")[0] + '"\r\n\r\n' + parameters[i].split("=")[1] + "\r\n";
+				}
+                for(i = 0, f = Object.keys(param.files); i < f.length; ++i) {
+					if((g = param.files[f[i]]).length) {
+
+                        for (j = 0; j < g.length; ++j) {
+                            data += "--" + multipartBoundary + "\r\n";
+                            data += 'content-disposition: form-data; name="' + encodeURIComponent(f[i]) + '"; ';
+                            data += 'filename="' + encodeURIComponent(g[j].file.name) + '"\r\n';
+                            data += "Content-Type: " + g[j].file.type + "\r\n\r\n";
+                            data += arrayBufferToString(g[j].arrayBuffer) + "\r\n";
+                        }
+                    }
+				}
+
+                data += "--" + multipartBoundary + "--";
+
+                xhrO.onreadystatechange = stateChange;
+                vxJS.event.serve(that, "beforeSend");
+                xhrO.send(data);
+			}
+
 			// do POST with file upload
 			
-			else if(param.file) {
+			else if(req.upload && param.file) {
 				setHeader("X-File-Name", (param.filename || param.file.name).replace(/[^\x00-\x7F]/g, function(c) { return encodeURIComponent(c); }));
 				setHeader("X-File-Size", param.file.size);
 				setHeader("X-File-Type", param.file.type);

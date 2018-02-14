@@ -29,31 +29,67 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		config = {};
 	}
 
-	var uploads = {};
-
-	var fReader = function(elem) {
-	    var reader = new FileReader();
-
-	    uploads[elem.name] = [];
-
-	    reader.addEventListener("load", function() {
-	        uploads[elem.name].push(reader.result);
-	    });
-
-        if(elem.files.length) {
-            data[elem.name] = [];
-            for(var i = 0; i < elem.files.length; ++i) {
-                reader.readAsArrayBuffer(elem.files);
-            }
-        }
-    };
-
 	var	prevErr = [], msgBoxes = [], that = {}, payload,
 		immediateSubmit,
 		submittedValues, submittingElement, submittedByApp, submittingNow, submissionCancelled,
 		xhr = vxJS.xhr(xhrReq || {}), lastXhrResponse;
 
-	var disableSubmit = function() {
+    var uploads = [];
+
+    var uploadInput = function(input) {
+
+		var reader = new FileReader(), files = [], ndx;
+
+        reader.addEventListener("load", function() {
+            files[ndx].arrayBuffer = reader.result;
+
+            // load next file in queue
+
+            if(files[++ndx]) {
+            	reader.readAsArrayBuffer(files[ndx].file);
+			}
+        });
+
+        var startLoad = function() {
+
+        	if(reader.readyState === FileReader.LOADING) {
+        		reader.abort();
+			}
+
+            files = [];
+
+        	if(input.files.length) {
+        		for(var i = 0; i < input.files.length; ++i) {
+        			files.push( { file: input.files[i], arrayBuffer: null } );
+				}
+				ndx = 0;
+                reader.readAsArrayBuffer(files[0].file);
+            }
+		};
+
+        if(input.value) {
+        	startLoad();
+		}
+        input.addEventListener("change", startLoad);
+
+        return {
+			getFiles: function() {
+				return files;
+			},
+			getInput: function() {
+				return input;
+			}
+		};
+
+    };
+
+    var fileInputs = form.querySelectorAll("input[type=file]");
+
+    for(var i = 0; i < fileInputs.length; ++i) {
+		uploads.push(uploadInput(fileInputs[i]));
+	}
+
+    var disableSubmit = function() {
 		submittingNow = true;
 	};
 
@@ -178,7 +214,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	};
 
 	var getValues = function(fe, submit) {
-		var	 i, v, j, o, vals = {}, e, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
+		var	 e, i, v, j, o, vals = {}, name, ndx, hashRex = /^(.*?)\[(.*?)\]$/, matches, arrValue;
 
 		for (i = 0; i < fe.length; ++i) {
 
@@ -195,9 +231,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 			if (e.type && !e.disabled) {
 				switch (e.type) {
-                    case "file":
-                        console.log(e.files);
-				        break;
 					case "radio":
 					case "checkbox":
 						if (e.checked) {
@@ -247,7 +280,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 						}
 						break;
 
-					default:
+                    case "file":
+                        break;
+
+                    default:
 						if(matches) {
 							v[ndx] = e.value;
 						}
@@ -395,15 +431,22 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		vxJS.event.serve(that, "check", response);
 	};
 
-	var handleClick = function(e) {
-		var v;
 
-		vxJS.event.preventDefault(e);
+	var handleClick = function(elem) {
+
+		var v, fileData = {}, i, n;
+
+		// submission already in progress
 
 		if(submittingNow) {
 			return;
 		}
-		submittingElement = this;
+
+        v = getValues(form.elements, elem);
+
+		// proceed with submission
+
+		submittingElement = elem;
 
 		vxJS.event.serve(that, "beforeSubmit");
 
@@ -415,20 +458,32 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		disableSubmit();
 
 		if(immediateSubmit) {
-			handleXhrResponse( { command: "submit"} );
+			handleXhrResponse({ command: "submit" });
 		}
 		else {
-			v = getValues(form.elements, this);
 			vxJS.merge(v, payload);
 
-			xhr.use(null, v, { node: submittingElement }).submit();
+			if(uploads.length) {
+				for(i = 0; i < uploads.length; ++i) {
+					n = uploads[i].getInput().name;
+					if(!fileData[n]) {
+						fileData[n] = [];
+					}
+					fileData[n] = fileData[n].concat(uploads[i].getFiles());
+				}
+                xhr.use({ multipart: true }, { formData: v, files: fileData }, { node: submittingElement });
+            }
+            else {
+                xhr.use({ multipart: false }, v, { node: submittingElement });
+			}
 
+			xhr.submit();
 			submittedValues = v;
 		}
 	};
 
 	that.addSubmit = function(elem) {
-		vxJS.event.addListener(elem, "click", handleClick);
+		vxJS.event.addListener(elem, "click", function(e) { vxJS.event.preventDefault(e); handleClick(this); });
 		return this;
 	};
 
