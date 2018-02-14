@@ -153,8 +153,10 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		abort();
 
+        vxJS.event.serve(that, "beforeSend");
+
 		if(req.command) {
-			param.httpRequest = req.command;
+            (param.formData || param).httpRequest = req.command;
 		}
 		if(req.echo) {
 			param.echo = 1;
@@ -179,13 +181,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 					)
 			, true);
 
-			for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
-				xhrO.setRequestHeader(f[i], headers[f[i]]);
-			}
-
-			xhrO.onreadystatechange = stateChange;
-			vxJS.event.serve(that, "beforeSend");
-			xhrO.send(null);
+			data = null;
 		}
 
 		// do POST
@@ -197,17 +193,12 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 			if(!req.upload && !req.multipart) {
 				setHeader("Content-Type", "application/x-www-form-urlencoded");
-				for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
-					xhrO.setRequestHeader(f[i], headers[f[i]]);
-				}
-				xhrO.onreadystatechange = stateChange;
-				vxJS.event.serve(that, "beforeSend");
-				
+
 				if(req.useJsonSerialization) {
-					xhrO.send("xmlHttpRequest="+encodeURIComponent(JSON.stringify(param)));
+					data = "xmlHttpRequest="+encodeURIComponent(JSON.stringify(param));
 				}
 				else {
-					xhrO.send(buildQueryString(param));
+					data = buildQueryString(param);
 				}
 			}
 
@@ -215,7 +206,8 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 			else if(req.multipart) {
 				setHeader("Content-Type", "multipart/form-data; boundary=" + multipartBoundary);
-				parameters = buildQueryString(param.formData).split("&");
+
+                parameters = buildQueryString(param.formData).split("&");
 				data = "";
 
 				for(i = 0; i < parameters.length; ++i) {
@@ -237,9 +229,6 @@ vxJS.xhr = function(req, param, anim, cb) {
 
                 data += "--" + multipartBoundary + "--";
 
-                xhrO.onreadystatechange = stateChange;
-                vxJS.event.serve(that, "beforeSend");
-                xhrO.send(data);
 			}
 
 			// do POST with file upload
@@ -248,15 +237,23 @@ vxJS.xhr = function(req, param, anim, cb) {
 				setHeader("X-File-Name", (param.filename || param.file.name).replace(/[^\x00-\x7F]/g, function(c) { return encodeURIComponent(c); }));
 				setHeader("X-File-Size", param.file.size);
 				setHeader("X-File-Type", param.file.type);
-				for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
-					xhrO.setRequestHeader(f[i], headers[f[i]]);
-				}
-				xhrO.onreadystatechange = stateChange;
-				vxJS.event.serve(that, "beforeSend");
-				xhrO.send(param.file);
+
+				data = param.file;
 			}
-		}
-		
+
+        }
+
+        // set headers
+
+        for(i = 0, f = Object.keys(headers); i < f.length; ++i) {
+            xhrO.setRequestHeader(f[i], headers[f[i]]);
+        }
+
+        // trigger request
+
+        xhrO.onreadystatechange = stateChange;
+        xhrO.send(data);
+
 		active = true;
 
 		startTimer();
