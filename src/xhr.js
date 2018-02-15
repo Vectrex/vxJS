@@ -140,10 +140,13 @@ vxJS.xhr = function(req, param, anim, cb) {
 	};
 
 	var arrayBufferToString = function(arrayBuffer) {
-        var bytes = new Uint8Array(arrayBuffer), binary = "";
-        for (var i = 0, l = bytes.length; i < l; ++i) {
-            binary += String.fromCharCode(bytes[i]);
+
+        var bytes = new Uint8Array(arrayBuffer), binary = "", chunkSize = Math.pow(2, 16) - 1;
+
+        for (var i = 0, l = bytes.length; i < l; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
         }
+
         return binary;
     };
 
@@ -195,7 +198,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 				setHeader("Content-Type", "application/x-www-form-urlencoded");
 
 				if(req.useJsonSerialization) {
-					data = "xmlHttpRequest="+encodeURIComponent(JSON.stringify(param));
+					data = "xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param));
 				}
 				else {
 					data = buildQueryString(param);
@@ -219,9 +222,9 @@ vxJS.xhr = function(req, param, anim, cb) {
 
                         for (j = 0; j < g.length; ++j) {
                             data += "--" + multipartBoundary + "\r\n";
-                            data += 'content-disposition: form-data; name="' + encodeURIComponent(f[i]) + '"; ';
-                            data += 'filename="' + encodeURIComponent(g[j].file.name) + '"\r\n';
-                            data += "Content-Type: " + g[j].file.type + "\r\n\r\n";
+                            data += 'content-disposition: form-data; name="' + f[i] + '"; ';
+                            data += 'filename="' + g[j].file.name + '"\r\n';
+                            data += "content-type: " + g[j].file.type + "\r\n\r\n";
                             data += arrayBufferToString(g[j].arrayBuffer) + "\r\n";
                         }
                     }
@@ -229,6 +232,11 @@ vxJS.xhr = function(req, param, anim, cb) {
 
                 data += "--" + multipartBoundary + "--";
 
+				var payload = new Uint8Array(data.length);
+				for(var i = 0; i < data.length; ++i) {
+					payload[i] = data.charCodeAt(i) & 0xFF;
+				}
+				data = payload.buffer;
 			}
 
 			// do POST with file upload
