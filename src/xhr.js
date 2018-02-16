@@ -1,7 +1,7 @@
 /**
  * XHR wrapper
  *
- * @version 6.0.0 2018-02-03
+ * @version 6.1.0 2018-02-16
  * @author Gregor Kofler
  *
  * @param {Object} req, request { command: {string}, uri: {String}, echo: {Boolean}, timeout: {Number}, forceXMLResponse: {Boolean}
@@ -20,7 +20,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 	if(!anim)	{ anim = {}; }
 
 	var	timeout = req.timeout || 5000, timer, active,
-		headers = {}, multipartBoundary = 'vxJS-xhr-boundary',
+		headers = {},
 		xhrO = new XMLHttpRequest(), that = { response: {} };
 
 	var abort = function() {
@@ -139,19 +139,8 @@ vxJS.xhr = function(req, param, anim, cb) {
 	    return parameters.join("&");
 	};
 
-	var arrayBufferToString = function(arrayBuffer) {
-
-        var bytes = new Uint8Array(arrayBuffer), binary = "", chunkSize = Math.pow(2, 16) - 1;
-
-        for (var i = 0, l = bytes.length; i < l; i += chunkSize) {
-            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-        }
-
-        return binary;
-    };
-
 	var submit = function() {
-		var l = window.location, i, j, f, g, parameters, data,
+		var l = window.location, i, j, n, f, g, parameters, data,
 			uri = encodeURI(req.uri || (l.hash ? l.href.substring(0, l.href.indexOf(l.hash)) : l.href));
 
 		abort();
@@ -175,7 +164,7 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 		if(req.method && req.method.toUpperCase() == "GET") {
 			xhrO.open( "GET",
-					uri += (uri.indexOf("?") !== -1 ? "&" : "?") +
+					uri + (uri.indexOf("?") !== -1 ? "&" : "?") +
 					(new Date()).getTime() +
 					"&" +
 					(req.useJsonSerialization ?
@@ -194,59 +183,19 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 			// normal POST
 
-			if(!req.upload && !req.multipart) {
+			if(!req.raw) {
+
 				setHeader("Content-Type", "application/x-www-form-urlencoded");
 
-				if(req.useJsonSerialization) {
+				if (req.useJsonSerialization) {
 					data = "xmlHttpRequest=" + encodeURIComponent(JSON.stringify(param));
 				}
 				else {
 					data = buildQueryString(param);
 				}
-			}
-
-			// multipart POST
-
-			else if(req.multipart) {
-				setHeader("Content-Type", "multipart/form-data; boundary=" + multipartBoundary);
-
-                parameters = buildQueryString(param.formData).split("&");
-				data = "";
-
-				for(i = 0; i < parameters.length; ++i) {
-                    data += "--" + multipartBoundary + "\r\n";
-                    data += 'content-disposition: form-data; name="' + parameters[i].split("=")[0] + '"\r\n\r\n' + parameters[i].split("=")[1] + "\r\n";
-				}
-                for(i = 0, f = Object.keys(param.files); i < f.length; ++i) {
-					if((g = param.files[f[i]]).length) {
-
-                        for (j = 0; j < g.length; ++j) {
-                            data += "--" + multipartBoundary + "\r\n";
-                            data += 'content-disposition: form-data; name="' + f[i] + '"; ';
-                            data += 'filename="' + g[j].file.name + '"\r\n';
-                            data += "content-type: " + g[j].file.type + "\r\n\r\n";
-                            data += arrayBufferToString(g[j].arrayBuffer) + "\r\n";
-                        }
-                    }
-				}
-
-                data += "--" + multipartBoundary + "--";
-
-				var payload = new Uint8Array(data.length);
-				for(var i = 0; i < data.length; ++i) {
-					payload[i] = data.charCodeAt(i) & 0xFF;
-				}
-				data = payload.buffer;
-			}
-
-			// do POST with file upload
-			
-			else if(req.upload && param.file) {
-				setHeader("X-File-Name", (param.filename || param.file.name).replace(/[^\x00-\x7F]/g, function(c) { return encodeURIComponent(c); }));
-				setHeader("X-File-Size", param.file.size);
-				setHeader("X-File-Type", param.file.type);
-
-				data = param.file;
+            }
+            else {
+				data = param;
 			}
 
         }
@@ -273,6 +222,14 @@ vxJS.xhr = function(req, param, anim, cb) {
 
 	that.setHeader = function(field, value) {
 		setHeader(field, value);
+		return this;
+	};
+
+	that.setHeaders = function(headers) {
+		for(var i = 0, keys = Object.keys(headers); i < keys.length; ++i) {
+			setHeader(keys[i], headers[keys[i]]);
+		}
+
 		return this;
 	};
 

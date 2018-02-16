@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 0.11.0 2018-02-03
+ * @version 1.0.0 2018-02-16
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -434,7 +434,7 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 
 	var handleClick = function(elem) {
 
-		var v, fileData = {}, i, n;
+		var v, i, j, l, f, parameters, data, dataChunk, uint, buffer, offset, multipartBoundary = 'vxJS-xhrForm-boundary';
 
 		// submission already in progress
 
@@ -461,20 +461,90 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			handleXhrResponse({ command: "submit" });
 		}
 		else {
+
 			vxJS.merge(v, payload);
 
 			if(uploads.length) {
-				for(i = 0; i < uploads.length; ++i) {
-					n = uploads[i].getInput().name;
-					if(!fileData[n]) {
-						fileData[n] = [];
-					}
-					fileData[n] = fileData[n].concat(uploads[i].getFiles());
+
+                xhr.setHeader("Content-Type", "multipart/form-data; boundary=" + multipartBoundary);
+
+                parameters = [];
+
+                if(xhr.getRequestParameters().command) {
+                	parameters.push({ name: "httpRequest", value: xhr.getRequestParameters().command });
 				}
-                xhr.use({ multipart: true }, { formData: v, files: fileData }, { node: submittingElement });
+                if(xhr.getRequestParameters().echo) {
+                    parameters.push({ name: "echo", value: xhr.getRequestParameters().echo });
+                }
+
+                for (i in v) {
+                    if(v.hasOwnProperty(i)) {
+                    	if(Array.isArray(v[i])) {
+                    		for(j = 0, l = v[i].length; i < l; ++j) {
+                                parameters.push({ name: key + "[" + j + "]", value: v[i][j] });
+							}
+						}
+						else {
+                    		parameters.push({ name: i, value: v[i] });
+						}
+                    }
+                }
+
+                data = [];
+                dataChunk = "";
+
+                for (i = 0; i < parameters.length; ++i) {
+                    dataChunk += "--" + multipartBoundary + "\r\n";
+                    dataChunk += 'content-disposition: form-data; name="' + parameters[i].name + '"\r\n\r\n' + parameters[i].value + "\r\n";
+                }
+                data.push(dataChunk);
+
+                for(i = 0; i < uploads.length; ++i) {
+
+                    f = uploads[i].getFiles();
+
+                    for(j = 0; j < f.length; ++j) {
+                        dataChunk = "--" + multipartBoundary + "\r\n";
+                        dataChunk += 'content-disposition: form-data; name="' + uploads[i].getInput().name + '"; ';
+                        dataChunk += 'filename="' + f[j].file.name + '"\r\n';
+                        dataChunk += "content-type: " + f[j].file.type + "\r\n\r\n";
+                        data.push(dataChunk, new Uint8Array(f[j].arrayBuffer), "\r\n");
+
+					}
+
+                }
+
+                data.push("--" + multipartBoundary + "--");
+
+                l = 0;
+                for (i = data.length; i--;) {
+                    l += data[i].length;
+                }
+
+                buffer = new Uint8Array(l);
+                offset = 0;
+
+                for (i = 0; i < data.length; ++i) {
+                    if (data[i] instanceof Uint8Array) {
+                        buffer.set(data[i], offset);
+                        offset += data[i].length;
+                    }
+                    else {
+                        uint = new Uint8Array(data[i].length);
+                        for (j = 0, l = data[i].length; j < l; ++j) {
+                            uint[j] = data[i].charCodeAt(j);
+                        }
+                        buffer.set(uint, offset);
+                        offset += l;
+                    }
+                }
+
+                xhr.use({ raw: true }, buffer, { node: submittingElement });
+
             }
+
             else {
-                xhr.use({ multipart: false }, v, { node: submittingElement });
+                xhr.use(null, v, { node: submittingElement });
 			}
 
 			xhr.submit();
