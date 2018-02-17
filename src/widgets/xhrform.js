@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 1.0.0 2018-02-16
+ * @version 1.0.1 2018-02-16
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -442,8 +442,6 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 			return;
 		}
 
-        v = getValues(form.elements, elem);
-
 		// proceed with submission
 
 		submittingElement = elem;
@@ -455,14 +453,16 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 		    return;
         }
 
-		disableSubmit();
+        disableSubmit();
 
 		if(immediateSubmit) {
 			handleXhrResponse({ command: "submit" });
 		}
 		else {
 
-			vxJS.merge(v, payload);
+            v = getValues(form.elements, elem);
+
+            vxJS.merge(v, payload);
 
 			if(uploads.length) {
 
