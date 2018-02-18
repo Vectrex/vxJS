@@ -7,7 +7,7 @@
  * 
  * pushState() is used when config.setHash is set and browser support suffices
  * 
- * @version 0.7.0 2018-01-18
+ * @version 0.8.0 2018-02-18
  * @author Gregor Kofler
  *
  * @param [{Object} HTMLElement]:
@@ -245,7 +245,16 @@ vxJS.widget.simpleTabs = (function() {
 			tab.focus();
 			return this;
 		},
-		
+
+        /**
+		 * get last active tab
+		 *
+         * @returns {Tab}
+         */
+		getLast: function() {
+			return this.last;
+		},
+
 		/**
 		 * create and insert a new tab
 		 * 
