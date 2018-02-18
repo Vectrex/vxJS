@@ -6,7 +6,7 @@
  * will contain objects with name of elements, new values and
  * possible error messages
  *
- * @version 1.0.1 2018-02-16
+ * @version 1.1.0 2018-02-18
  * @author Gregor Kofler, info@gregorkofler.com
  *
  * @param {Object} form element
@@ -662,6 +662,10 @@ vxJS.widget.xhrForm = function(form, xhrReq, config) {
 	that.cancelSubmission = function() {
         submissionCancelled = true;
     };
+
+	that.getUploads = function() {
+		return uploads;
+	};
 
 	vxJS.event.addListener(xhr, "complete", handleXhrResponse);
 	vxJS.event.addListener(xhr, "fail", enableSubmit);
