@@ -1,7 +1,7 @@
 /**
  * Provides custom elements and functionality used with widgets
  * 
- * @version 0.7.0 2017-07-31
+ * @version 0.8.0 2018-02-18
  * @author Gregor Kofler
  * 
  * For the full copyright and license information, please view the LICENSE
@@ -11,7 +11,6 @@
 /**
  * vxJS.widget.shared.overlay()
  * vxJS.widget.shared.hiLite(text, node, className)
- * vxJS.widget.shared.shadeTableRows(parameterObject)
  * vxJS.widget.shared.list(parameterObject)
  * 
  * @todo list: Safari doesn't follow keystrokes
@@ -129,32 +128,6 @@ vxJS.widget.shared = {
 				n.parentNode.replaceChild(frag, n);
 			}
 		});
-	},
-
-	/**
-	 * shade table rows by assigning alternating class names
-	 */
-	shadeTableRows: function(param) {
-		var t, r, c, i, j, l;
-		if(!param || !(t = param.element)) {
-			return;
-		}
-
-		if (t.nodeName.toUpperCase() !== "TBODY") {
-			if (!t.tBodies || !(t = t.tBodies[0])) {
-				return;
-			}
-		}
-		if(!(r = t.rows)) {
-			return;
-		}
-		c = param.classNames && param.classNames.length && param.classNames.length > 1 ? param.classNames : ["row0", "row1"];
-
-		for(i = 0, j = 0, l = r.length; l--; ++j) {
-			if(r[j].style.display !== "none") {
-				r[j].className = [r[j].className.replace(new RegExp("(^| )(" + c.join("|") +")( |$)"), ""), c[i++ % c.length]].join(" ");
-			}
-		}
 	},
 
 	/**
