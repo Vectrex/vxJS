@@ -17,18 +17,14 @@
  *	outputFormat:	{String} format string to format output inserted in formElem
  *	months:			{String} months name of months separated by spaces
  *	skinClass:		{String} className of calendar div, defaults to vxJS_calendar
- *	customShow:		{Function} callback function applying fx, when element is shown
- *	customHide:		{Function} callback function applying fx, when element is hidden
  *	alignTo:		{Object} element to which the calendar gets aligned to, defaults to formElem
- *
- * @param {Object}	optional XHR configuration
  *
  * @return {Object} calendar widget
  *
  * served events: "datePick", "monthChange", "yearChange", "showWidget", "hideWidget"
  */
 
-vxJS.widget.calendar = function(formElem, config, xhrReq) {
+vxJS.widget.calendar = function(formElem, config) {
 
 	"use strict";
 
@@ -43,7 +39,7 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		locale = config.inputLocale || "date_de",
 		format = config.outputFormat || (locale === "date_de" ? "%D.%M.%Y" : "%Y-%M-%D"),
 		months = (config.months || "Jan Feb M\u00E4rz Apr Mai Juni Juli Aug Sept Okt Nov Dez").split(" "),
-		showCw = config.showCw, noPast, noFuture, xhr, xhrActive;
+		showCw = config.showCw, noPast, noFuture;
 
 	if(config.noPast) {
 		noPast = config.noPast.constructor === Date ? config.noPast : today;
@@ -52,7 +48,8 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		noFuture = config.noFuture.constructor === Date ? config.noFuture : today;
 	}
 
-	// US style not implemented yet
+	//@todo  US style not implemented yet
+
 	var getBeginOfCW = function(cw, year, usStyle) {
 		year = year || new Date().getFullYear();
 
@@ -66,8 +63,8 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		var v = formElem.value.trim();
 
 		// cw/year?
-		if(/^\d\d?[ \/\-\.]+(?:\d{2}|\d{4})$/.test(v)) {
-			v	= v.split(/[ \/\-\.]+/);
+		if(/^\d\d?[ \/\-.]+(?:\d{2}|\d{4})$/.test(v)) {
+			v	= v.split(/[ \/\-.]+/);
 			return getBeginOfCW(v[0], (""+(marked || today).getFullYear()).slice(0, 4-v[1].length) + v[1], locale === "date_us");
 		}
 
@@ -100,30 +97,8 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		}
 	};
 
-	var handleXhrResponse = function() {
-		var	r = this.response.entries, l, d, firstDay = dayCells[0].date, m = firstDay.getMonth(),
-			trail = m !== sheetDate.getMonth() ? new Date(firstDay.getFullYear(), m + 1, 0).getDate() - firstDay.getDate() : -1;
-
-		xhrActive = false;
-		vxJS.dom.removeClassName(table, "xhrActive");
-
-		if(r && (l = r.length)) {
-			while(l--) {
-				if((d = +r[l].day) && d + trail >= 0 && dayCells[d + trail]) {
-					if(r[l].disabled) {
-						vxJS.dom.addClassName(dayCells[d + trail].elem, "disabled");
-						dayCells[d + trail].disabled = true;
-					}
-					if(r[l].label) {
-						dayCells[d + trail].elem.appendChild("div".create(r[l].label));
-					}
-				}
-			}
-		}
-	};
-
 	var fillCalendar = function() {
-		var	w, r, i, cN, rows,
+		var	w, i, cN, rows, calendarBody = "div".setProp("class", "calendar-body").create(), cellContent,
 			m = sheetDate.getMonth(), y = sheetDate.getFullYear(), eom = new Date(y, m + 1, 0), days = eom.getDate(),
 			prevTrail = new Date(y, m, (locale === "date_us" ? 1 : 0) ).getDay(),
 			nextTrail = ((locale === "date_us" ? 6 : 7) - eom.getDay()) % 7,
@@ -140,37 +115,46 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		dayCells = [];
 
 		for(i = -prevTrail + 1; i <= days + nextTrail; ++i) {
-			cN = [];
+			cN = ["calendar-date"];
 			loopDate = new Date(y, m, i);
 
-			if(!((i + prevTrail - 1) % 7)) {
-				r = "tr".create();
-				docFrag.appendChild(r);
-			}
 			if((noPast && noPast > loopDate) || (noFuture && noFuture < loopDate)) {
 				cN.push("disabled");
 			}
-			if(i < 1 || i > days) {
-				cN.push("trail");
+			if(i < 1) {
+                cN.push("prev-month");
 			}
-			if(loopDate.toString() === today.toString()) {
-				cN.push("today");
+			else if(i > days) {
+                cN.push("next-month");
 			}
-			if(marked && loopDate.toString() === marked.toString()) {
-				cN.push("marked");
+			else {
+				cN.push("current-month");
 			}
 
-			r.appendChild("td".setProp("class", cN.join(" ")).create(loopDate.getDate()));
+			if(cN.indexOf("disabled") === -1) {
+			    cellContent = "button".setProp("class", "date-item").create(loopDate.getDate());
 
-			dayCells[i + prevTrail - 1] = {
-				date: loopDate,
-				elem: r.lastChild,
-				disabled: cN.indexOf("disabled") != -1
-			};
+                dayCells[i + prevTrail - 1] = {
+                    date: loopDate,
+                    elem: cellContent,
+                    disabled: cN.indexOf("disabled") !== -1
+                };
+            }
+            else {
+			    cellContent = "span".setProp("class", "date-item").create(loopDate.getDate());
+            }
+
+            if(loopDate.toString() === today.toString()) {
+                cellContent.classList.add("date-today");
+            }
+            if(marked && loopDate.toString() === marked.toString()) {
+                cellContent.classList.add("active");
+            }
+
+            calendarBody.appendChild("div".setProp("class", cN.join(" ")).create(cellContent));
+
 		}
-
-		docFrag.appendChild(r);
-
+/*
 		if(showCw) {
 			weekCells = [];
 			w = w || firstDay.getCW(locale === "date_us");
@@ -185,27 +169,26 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 				weekCells.push(rows[i].lastChild);
 			}
 		}
+*/
+		layer.querySelector(".calendar-container").replaceChild(calendarBody, layer.querySelector(".calendar-container").lastChild);
 
-		table.replaceChild("tbody".create(docFrag), table.childNodes[1]);
-
-		if(xhr) {
-			xhr.use(xhrReq, { date: sheetDate.getFullYear() + "-" + ("0" + (sheetDate.getMonth() + 1)).slice(-2) + "-01" }).submit();
-			xhrActive = true;
-			vxJS.dom.addClassName(table, "xhrActive");
-		}
 	};
 
 	var createCalendar = function() {
-		var d, bar = ["span".setProp("class", "previous-month").create(), "span".setProp("class", "month").create(mNode), "span".setProp("class", "next-month").create() ];
 
-		table	= "table".create(["thead".create(), "tbody".create()]);
+		var d;
+
+        // navbar
+
+        var bar = ["button".setProp("class", "btn btn-action btn-link btn-large prvMon").create(), "div".setProp("class", "month navbar-primary").create(mNode), "button".setProp("class", "btn btn-action btn-link btn-large nxtMon").create() ];
+		var body = "div".setProp("class", "calendar-container").create(["div".setProp("class", "calendar-header").create(), "div".setProp("class", "calendar-body").create()]);
 
 		if(!config.noYearInput) {
 			input = "input".setProp([["maxLength", 4], ["class", "year"]]).create();
-			bar = ["div".setProp("class", "select-month").create(bar), "div".setProp("class", "select-year").create(["span".setProp("class", "previous-year").create(), input,"span".setProp("class", "next-year").create()])];
+			bar = ["div".setProp("class", "select-month").create(bar), "div".setProp("class", "select-year").create(["span".setProp("class", "prvYear").create(), input,"span".setProp("class", "nxtYear").create()])];
 		}
 
-		layer = "div".setProp("class", config.skinClass || "vx-calendar").create("div".create(["div".setProp("class", "navbar").create(bar), table]));
+		layer = "div".setProp("class", config.skinClass || "calendar col-1").create(["div".setProp("class", "calendar-nav navbar").create(bar), body]);
 
 		switch(locale) {
 			case "date_us":
@@ -222,7 +205,9 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 			d.pop();
 		}
 
-		table.firstChild.appendChild("tr".create(d.domWrapWithTag("th")));
+		for(var i = 0; i < d.length; ++i) {
+            body.firstChild.appendChild("div".setProp("class", "calendar-date").create(d[i]));
+        }
 
 		if(input) {
 			vxJS.event.addListener(input, "blur", function() {
@@ -249,80 +234,67 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		}
 
 		var mark = function(n) {
-			var prev = vxJS.dom.getElementsByClassName("marked", table)[0];
+			var prev = body.querySelector(".active");
 			if(prev) {
-				vxJS.dom.removeClassName(prev, "marked");
+				vxJS.dom.removeClassName(prev, "active");
 			}
-			vxJS.dom.addClassName(n, "marked");
+			vxJS.dom.addClassName(n, "active");
 		};
 
 		vxJS.event.addListener(layer, "click", function(e) {
-			var type, n, picked, c = this.className;
+			var type, n, picked, c = this.classList;
 
-			switch(c) {
-				case "previous-month":
-					sheetDate.setMonth(sheetDate.getMonth() - 1);
-					fillCalendar();
-					type = "monthChange";
-					break;
+            vxJS.event.cancelBubbling(e);
 
-				case "next-month":
-					sheetDate.setMonth(sheetDate.getMonth() + 1);
-					fillCalendar();
-					type = "monthChange";
-					break;
+            if(this.nodeName.toLowerCase() === 'button') {
 
-				case "previous-year":
-					sheetDate.setFullYear(sheetDate.getFullYear() - 1);
-					fillCalendar();
-					type = "yearChange";
-					break;
+            	if(c.contains("prvMon")) {
+                    sheetDate.setMonth(sheetDate.getMonth() - 1);
+                    fillCalendar();
+                    type = "monthChange";
+                }
+                else if(c.contains("nxtMon")) {
+                    sheetDate.setMonth(sheetDate.getMonth() + 1);
+                    fillCalendar();
+                    type = "monthChange";
+                }
+                else if(c.contains("prvYear")) {
+                    sheetDate.setFullYear(sheetDate.getFullYear() - 1);
+                    fillCalendar();
+                    type = "yearChange";
+                }
+                else if(c.contains("nxtYear")) {
+                    sheetDate.setFullYear(sheetDate.getFullYear() + 1);
+                    fillCalendar();
+                    type = "yearChange";
+                }
+                else {
+            	    for(var i = dayCells.length; i--;) {
+            	        if(dayCells[i].elem === this) {
+            	            type = "datePick";
+            	            picked = dayCells[i].date;
 
-				case "next-year":
-					sheetDate.setFullYear(sheetDate.getFullYear() + 1);
-					fillCalendar();
-					type = "yearChange";
-					break;
+                            if (config.dontHide) {
+                                mark(this.parentNode);
+                            }
+                            break;
+                        }
+                    }
+                }
 
-				default:
-					if(xhrActive) {
-						return;
-					}
-					if(this.nodeName.toLowerCase() == "td") {
-						n = this;
-					}
-					else {
-						n = vxJS.dom.getParentElement(this, "td");
-					}
-					if(n) {
-						if(n.cellIndex == 7 && (picked = getFirstEnabledDay(n.parentNode.rowIndex - 1).date)) {
-							type = "datePick";
-						}
-						else {
-							c = dayCells[(n.parentNode.rowIndex - 1) * 7 + n.cellIndex];
-							if(!c.disabled) {
-								picked = c.date;
-								type = "datePick";
-								if(config.dontHide) {
-									mark(n);
-								}
-							}
-						}
-					}
-			}
-			if(type) {
-				if(type === "datePick") {
-					marked = picked;
+                if (type) {
+                    if (type === "datePick") {
+                        marked = picked;
 
-					if(formElem) {
-						formElem.value = picked.format(format);
-					}
-					docListener();
-				}
-				vxJS.event.serve(that, type);
-			}
+                        if (formElem) {
+                            formElem.value = picked.format(format);
+                        }
+                        docListener();
+                    }
+                    vxJS.event.serve(that, type);
+                }
+            }
 
-			vxJS.event.cancelBubbling(e);
 		});
 
 		if(!config.dontHide) {
@@ -369,25 +341,15 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 		if(alignTo) {
 			placeLayer();
 		}
-		if(typeof config.customShow == "function") {
-			config.customShow.apply(that);
-		}
-		else {
-			layer.style.display = "";
-		}
 
+		layer.style.display = "";
 		shown = true;
 		vxJS.event.serve(that, "showWidget");
 	};
 
 	var hide = function() {
 		if(shown) {
-			if(typeof config.customHide == "function") {
-				config.customHide.apply(that);
-			}
-			else {
-				layer.style.display = "none";
-			}
+			layer.style.display = "none";
 			shown = false;
 			vxJS.event.serve(that, "hideWidget");
 		}
@@ -407,9 +369,9 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	var keydownListener = function(e) {
 		var kc = e.keyCode, v;
 
-		if(kc == 13 && config.dontHide) {
+		if(kc === 13 && config.dontHide) {
 			v = getElemDate();
-			if(!marked || v.toString() != marked.toString()) {
+			if(!marked || v.toString() !== marked.toString()) {
 				marked = v;
 				setSheetDate(v);
 				fillCalendar();
@@ -422,12 +384,6 @@ vxJS.widget.calendar = function(formElem, config, xhrReq) {
 	};
 
 	createCalendar();
-
-	if(xhrReq) {
-		xhr = vxJS.xhr();
-		vxJS.event.addListener(xhr, "complete", handleXhrResponse);
-		vxJS.event.addListener(xhr, "timeout", function() { xhrActive = false; vxJS.dom.removeClassName(table, "xhrActive"); });
-	}
 
 	if(config.trigger && !config.dontHide) {
 		triggerListenerId = vxJS.event.addListener(config.trigger, config.eType || "click", triggerListener);
