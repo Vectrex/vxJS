@@ -1,6 +1,6 @@
 /**
  * calendar widget
- * @version 2.3.0 2018-01-22
+ * @version 2.99.0 2018-03-06
  * @author Gregor Kofler
  *
  * @param {Object} (optional) formElem element receiving data value
@@ -32,8 +32,8 @@ vxJS.widget.calendar = function(formElem, config) {
 		config = {};
 	}
 
-	var	layer, shown, input, mNode = document.createTextNode(""), table, alignTo = config.alignTo || formElem, docFrag = document.createDocumentFragment(), that = {},
-		triggerListenerId, docListenerId, dayCells, weekCells,
+	var	layer, shown, input, mNode = document.createTextNode(""), alignTo = config.alignTo || formElem, that = {},
+		triggerListenerId, docListenerId, dayCells,
 		now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()),
 		marked = config.initDate && config.initDate.constructor === Date ? config.initDate : null, sheetDate,
 		locale = config.inputLocale || "date_de",
@@ -74,16 +74,6 @@ vxJS.widget.calendar = function(formElem, config) {
 		}
 	};
 
-	var getFirstEnabledDay = function(rowIndex) {
-		var i;
-
-		for (i = 0; i < 7; ++i) {
-			if(!dayCells[rowIndex * 7 + i].disabled) {
-				return dayCells[rowIndex * 7 + i];
-			}
-		}
-	};
-
 	var setSheetDate = function(d) {
 		if(!d || d.constructor !== Date) {
 			d = new Date();
@@ -98,7 +88,7 @@ vxJS.widget.calendar = function(formElem, config) {
 	};
 
 	var fillCalendar = function() {
-		var	w, i, cN, rows, calendarBody = "div".setProp("class", "calendar-body").create(), cellContent,
+		var	w, i, cN, rowNdx, calendarBody = "div".setProp("class", "calendar-body").create(), cellContent,
 			m = sheetDate.getMonth(), y = sheetDate.getFullYear(), eom = new Date(y, m + 1, 0), days = eom.getDate(),
 			prevTrail = new Date(y, m, (locale === "date_us" ? 1 : 0) ).getDay(),
 			nextTrail = ((locale === "date_us" ? 6 : 7) - eom.getDay()) % 7,
@@ -115,6 +105,7 @@ vxJS.widget.calendar = function(formElem, config) {
 		dayCells = [];
 
 		for(i = -prevTrail + 1; i <= days + nextTrail; ++i) {
+
 			cN = ["calendar-date"];
 			loopDate = new Date(y, m, i);
 
@@ -154,22 +145,21 @@ vxJS.widget.calendar = function(formElem, config) {
             calendarBody.appendChild("div".setProp("class", cN.join(" ")).create(cellContent));
 
 		}
-/*
-		if(showCw) {
-			weekCells = [];
-			w = w || firstDay.getCW(locale === "date_us");
-			rows = docFrag.childNodes;
 
-			for(i = 0; i < rows.length; ++i) {
-				if(w > 52) {
-					w = dayCells[i * 7].date.getCW(locale === "date_us");
-				}
-				rows[i].appendChild("td".create(w++));
-				rows[i].lastChild.className = "week" + (!getFirstEnabledDay(i) ? " disabled" : "");
-				weekCells.push(rows[i].lastChild);
-			}
+		if(showCw) {
+		    rowNdx = 0;
+			w = firstDay.getCW(locale === "date_us");
+
+			while(calendarBody.childNodes[rowNdx]) {
+                if(w > 52) {
+                    w = dayCells[i * 7].date.getCW(locale === "date_us");
+                }
+                calendarBody.insertBefore("div".setProp("class", "calendar-date cw").create("span".setProp("class", "date-item").create(w++)), calendarBody.childNodes[rowNdx]);
+                rowNdx += 8;
+            }
+
 		}
-*/
+
 		layer.querySelector(".calendar-container").replaceChild(calendarBody, layer.querySelector(".calendar-container").lastChild);
 
 	};
@@ -188,21 +178,21 @@ vxJS.widget.calendar = function(formElem, config) {
 			bar = ["div".setProp("class", "select-month").create(bar), "div".setProp("class", "select-year").create(["span".setProp("class", "prvYear").create(), input,"span".setProp("class", "nxtYear").create()])];
 		}
 
-		layer = "div".setProp("class", config.skinClass || "calendar col-1").create(["div".setProp("class", "calendar-nav navbar").create(bar), body]);
+		layer = "div".setProp("class", config.skinClass || ("calendar" + (config.showCw ? " cw" : ""))).create(["div".setProp("class", "calendar-nav navbar").create(bar), body]);
 
 		switch(locale) {
 			case "date_us":
-				d = "S,M,T,W,T,F,S,CW";
+				d = "CW,S,M,T,W,T,F,S";
 				break;
 			case "date_iso":
-				d = "M,T,W,T,F,S,S,CW";
+				d = "CW,M,T,W,T,F,S,S";
 				break;
 			default:
-				d = "M,D,M,D,F,S,S,KW";
+				d = "KW,M,D,M,D,F,S,S";
 		}
 		d = d.split(",");
 		if(!showCw) {
-			d.pop();
+			d.shift();
 		}
 
 		for(var i = 0; i < d.length; ++i) {
@@ -242,7 +232,7 @@ vxJS.widget.calendar = function(formElem, config) {
 		};
 
 		vxJS.event.addListener(layer, "click", function(e) {
-			var type, n, picked, c = this.classList;
+			var type, picked, c = this.classList;
 
             vxJS.event.cancelBubbling(e);
 
@@ -431,7 +421,7 @@ vxJS.widget.calendar = function(formElem, config) {
 
 	/**
 	 * set date of calendar explicitly
-	 * @param Date d
+	 * @param d Date
 	 */
 	that.setDate = function(d) {
 		if(d && d.constructor === Date && !isNaN(d)) {
