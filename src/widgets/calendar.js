@@ -1,11 +1,14 @@
 /**
  * calendar widget
- * @version 2.99.0 2018-03-06
+ *
+ * @version 3.0.0 2018-03-07
  * @author Gregor Kofler
  *
- * @param {Object} (optional) formElem element receiving data value
+ * @param formElem HTMLInputElement optional form element receiving data value
+ * @param config Object optional configuration object
+ * @return {Object} the calendar widget
  *
- * @param {Object} configuration (optional)
+ * configuration (optional)
  * 	trigger:		{Object} triggering element
  *	eType:			{String} event type
  *	dontHide:		{Boolean} show permanently
@@ -18,12 +21,10 @@
  *	months:			{String} months name of months separated by spaces
  *	skinClass:		{String} className of calendar div, defaults to vxJS_calendar
  *	alignTo:		{Object} element to which the calendar gets aligned to, defaults to formElem
- *
- * @return {Object} calendar widget
+ *  yearSelect:     {Boolean} adds two buttons and a year display to select year separately
  *
  * served events: "datePick", "monthChange", "yearChange", "showWidget", "hideWidget"
  */
-
 vxJS.widget.calendar = function(formElem, config) {
 
 	"use strict";
@@ -32,7 +33,7 @@ vxJS.widget.calendar = function(formElem, config) {
 		config = {};
 	}
 
-	var	layer, shown, input, mNode = document.createTextNode(""), alignTo = config.alignTo || formElem, that = {},
+	var	layer, shown, input, mContainer, yContainer, alignTo = config.alignTo || formElem, that = {},
 		triggerListenerId, docListenerId, dayCells,
 		now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()),
 		marked = config.initDate && config.initDate.constructor === Date ? config.initDate : null, sheetDate,
@@ -87,19 +88,23 @@ vxJS.widget.calendar = function(formElem, config) {
 		}
 	};
 
+    /**
+     * fill calendar with dates and optional calendar weeks
+     */
 	var fillCalendar = function() {
+
 		var	w, i, cN, rowNdx, calendarBody = "div".setProp("class", "calendar-body").create(), cellContent,
 			m = sheetDate.getMonth(), y = sheetDate.getFullYear(), eom = new Date(y, m + 1, 0), days = eom.getDate(),
 			prevTrail = new Date(y, m, (locale === "date_us" ? 1 : 0) ).getDay(),
 			nextTrail = ((locale === "date_us" ? 6 : 7) - eom.getDay()) % 7,
 			firstDay = new Date(y, m, 1 - prevTrail), loopDate;
 
-		if(config.noYearInput) {
-			mNode.nodeValue = months[m] + " " + y;
+		if(!config.yearSelect) {
+			mContainer.innerHTML = months[m] + " " + y;
 		}
 		else {
-			mNode.nodeValue = months[m];
-			input.value = y;
+            mContainer.innerHTML = months[m];
+			yContainer.innerHTML = y;
 		}
 
 		dayCells = [];
@@ -154,7 +159,7 @@ vxJS.widget.calendar = function(formElem, config) {
                 if(w > 52) {
                     w = dayCells[i * 7].date.getCW(locale === "date_us");
                 }
-                calendarBody.insertBefore("div".setProp("class", "calendar-date cw").create("span".setProp("class", "date-item").create(w++)), calendarBody.childNodes[rowNdx]);
+                calendarBody.insertBefore("div".setProp("class", "calendar-date cw disabled").create("span".setProp("class", "date-item").create(w++)), calendarBody.childNodes[rowNdx]);
                 rowNdx += 8;
             }
 
@@ -164,18 +169,30 @@ vxJS.widget.calendar = function(formElem, config) {
 
 	};
 
+    /**
+     * create calendar container with month and year selection
+     */
 	var createCalendar = function() {
 
-		var d;
+		var d, bar, body, prev;
 
         // navbar
 
-        var bar = ["button".setProp("class", "btn btn-action btn-link btn-large prvMon").create(), "div".setProp("class", "month navbar-primary").create(mNode), "button".setProp("class", "btn btn-action btn-link btn-large nxtMon").create() ];
-		var body = "div".setProp("class", "calendar-container").create(["div".setProp("class", "calendar-header").create(), "div".setProp("class", "calendar-body").create()]);
+        mContainer = "div".setProp("class", "month navbar-primary").create();
+        bar = [
+            "button".setProp("class", "btn btn-action btn-link btn-large prvMon").create(),
+            mContainer,
+            "button".setProp("class", "btn btn-action btn-link btn-large nxtMon").create()
+        ];
+		body = "div".setProp("class", "calendar-container").create(["div".setProp("class", "calendar-header").create(), "div".setProp("class", "calendar-body").create()]);
 
-		if(!config.noYearInput) {
-			input = "input".setProp([["maxLength", 4], ["class", "year"]]).create();
-			bar = ["div".setProp("class", "select-month").create(bar), "div".setProp("class", "select-year").create(["span".setProp("class", "prvYear").create(), input,"span".setProp("class", "nxtYear").create()])];
+		if(config.yearSelect) {
+		    yContainer = "div".setProp("class", "year navbar-primary").create();
+			bar.push(
+			    "button".setProp("class", "btn btn-action btn-link btn-large prvYear").create(),
+                yContainer,
+                "button".setProp("class", "btn btn-action btn-link btn-large nxtYear").create()
+            );
 		}
 
 		layer = "div".setProp("class", config.skinClass || ("calendar" + (config.showCw ? " cw" : ""))).create(["div".setProp("class", "calendar-nav navbar").create(bar), body]);
@@ -198,38 +215,6 @@ vxJS.widget.calendar = function(formElem, config) {
 		for(var i = 0; i < d.length; ++i) {
             body.firstChild.appendChild("div".setProp("class", "calendar-date").create(d[i]));
         }
-
-		if(input) {
-			vxJS.event.addListener(input, "blur", function() {
-				var y;
-				if(/^\d{2,}$/.test(this.value)) {
-					y = parseInt((""+new Date().getFullYear()).slice(0, 4-this.value.length) + this.value, 10);
-					if(y !== sheetDate.getFullYear()) {
-						sheetDate.setFullYear(y);
-						fillCalendar();
-						vxJS.event.serve(that, "yearChange");
-					}
-				}
-				this.value = sheetDate.getFullYear();
-			});
-
-			vxJS.event.addListener(input, "keydown", function(e) {
-				switch(e.keyCode) {
-					case 27:
-						this.value = sheetDate.getFullYear();
-					case 13:
-						this.blur();
-				}
-			});
-		}
-
-		var mark = function(n) {
-			var prev = body.querySelector(".active");
-			if(prev) {
-				vxJS.dom.removeClassName(prev, "active");
-			}
-			vxJS.dom.addClassName(n, "active");
-		};
 
 		vxJS.event.addListener(layer, "click", function(e) {
 			var type, picked, c = this.classList;
@@ -265,7 +250,10 @@ vxJS.widget.calendar = function(formElem, config) {
             	            picked = dayCells[i].date;
 
                             if (config.dontHide) {
-                                mark(this.parentNode);
+                                if(prev = body.querySelector(".active")) {
+                                    vxJS.dom.removeClassName(prev, "active");
+                                }
+                                vxJS.dom.addClassName(this.parentNode, "active");
                             }
                             break;
                         }
