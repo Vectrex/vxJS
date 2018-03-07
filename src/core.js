@@ -2,7 +2,7 @@
  * core script for vxJS framework
  *
  * @author Gregor Kofler, info@gregorkofler.com
- * @version 2.6.2 2016-05-23
+ * @version 2.8.0 2018-03-07
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
@@ -751,8 +751,8 @@ if(!this.vxJS) {
 	}
 
 	/**
-	 * wrapper functionality for both DOM elements and widgets,
-	 * allowing fx, drag and drop, etc.
+	 * wrapper functionality for both DOM elements and widgets
+	 * @deprecated
 	 */
 	vxJS.element = function() {
 		var registry = [];
@@ -784,7 +784,6 @@ if(!this.vxJS) {
 				else if(e.nodeType && e.nodeType === 1) {
 					o.element = e;
 				}
-				o.fxQueue = [];
 				registry.push(o);
 			}
 			return o;
@@ -817,46 +816,8 @@ if(!this.vxJS) {
 		removeListener: function(f) {
 			vxJS.event.removeListener(this, f);
 			return this;
-		},
-
-		/**
-		 * add effect element
-		 * @param {String} effect name
-		 * @param {Object} effect parameters
-		 */
-		fx: function(effect, param) {
-			if(vxJS.fx[effect]) {
-				vxJS.fx.add(this, effect, param);
-			}
-			return this;
-		},
-
-		/**
-		 * add pause effect element
-		 * @param {Number} seconds to wait
-		 */
-		pause: function(duration) {
-			vxJS.fx.pause(this, duration);
-			return this;
-		},
-
-		/**
-		 * clear entire fx queue
-		 * effects freeze in current state
-		 */
-		clearFxQueue: function() {
-			this.fxQueue = [];
-			return this;
-		},
-
-		/**
-		 * retrieve active entry in fx queue
-		 */
-		getActiveFx: function() {
-			if(this.fxQueue && this.fxQueue.length) {
-				return this.fxQueue[0];
-			}
 		}
+
 	};
 
 	vxJS.event = function() {

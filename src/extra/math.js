@@ -2,7 +2,7 @@
  * various math and crypto functions
  * 
  * @author Gregor Kofler, info@gregorkofler.at
- * @version 0.1.0 2013-02-19
+ * @version 0.1.1 2018-03-07
  * 
  * vxJS.math.md5() is based Joseph Myers' and Will Bonds work
  * https://github.com/wbond/md5-js/blob/master/md5.js
@@ -172,7 +172,7 @@ vxJS.math = {
 		while(i--) {
 			if(!u[i]) {
 				r = 0 | Math.random() * 16;
-				u[i] = "0123456789ABCDEF"[i == 19 ? (r & 0x3 | 0x8) : r];
+				u[i] = "0123456789ABCDEF"[i === 19 ? (r & 0x3 | 0x8) : r];
 			}
 		}
 
